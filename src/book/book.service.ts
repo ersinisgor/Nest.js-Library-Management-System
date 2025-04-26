@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { Book } from './entity/book.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -16,7 +16,15 @@ export class BookService {
   }
 
   async createBook(book: CreateBookDTO): Promise<Book> {
-    const createdBook = this.booksRepository.create(book);
-    return await this.booksRepository.save(createdBook);
+    try {
+      const createdBook = this.booksRepository.create(book);
+      return await this.booksRepository.save(createdBook);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        // PostgreSQL unique constraint error code
+        throw new ConflictException('A book with this ISBN already exists');
+      }
+      throw error; // Diğer hataları yeniden fırlat
+    }
   }
 }

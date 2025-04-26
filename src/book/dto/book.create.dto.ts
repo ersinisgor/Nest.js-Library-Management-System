@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsNotEmpty, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, Min } from 'class-validator';
 
 export class CreateBookDTO {
   @IsNotEmpty()
@@ -14,7 +14,7 @@ export class CreateBookDTO {
   @IsInt({ message: '$property must be an integer number.' })
   pageCount: number;
 
-  @IsNotEmpty()
   @IsBoolean()
+  @IsOptional()
   isAvailable: boolean;
 }
