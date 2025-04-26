@@ -1,6 +1,20 @@
-export interface CreateBookDTO {
+import { IsBoolean, IsInt, IsNotEmpty, Min } from 'class-validator';
+
+export class CreateBookDTO {
+  @IsNotEmpty()
   title: string;
+
+  @IsNotEmpty()
   isbn: string;
+
+  @IsNotEmpty()
+  @Min(1, {
+    message: '$property must be greater than at least $constraint1 page.',
+  })
+  @IsInt({ message: '$property must be an integer number.' })
   pageCount: number;
+
+  @IsNotEmpty()
+  @IsBoolean()
   isAvailable: boolean;
 }

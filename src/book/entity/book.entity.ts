@@ -9,7 +9,7 @@ export class Book {
   @Column()
   title: string;
 
-  @Column()
+  @Column({ unique: true })
   isbn: string;
 
   @Column()
