@@ -43,10 +43,9 @@ export class BookService {
   }
 
   async deleteBook(id: number): Promise<void> {
-    const book = await this.booksRepository.findOneBy({ id });
-    if (!book) {
+    const result = await this.booksRepository.delete(id);
+    if (result.affected === 0) {
       throw new NotFoundException(`Book with ID ${id} not found`);
     }
-    await this.booksRepository.delete(id);
   }
 }
