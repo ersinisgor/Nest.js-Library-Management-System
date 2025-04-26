@@ -6,10 +6,12 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Book } from './entity/book.entity';
 import { CreateBookDTO } from './dto/book.create.dto';
+import { UpdateBookDTO } from './dto/book.update.dto';
 
 @Controller('book')
 export class BookController {
@@ -28,6 +30,14 @@ export class BookController {
   @Post()
   async createBook(@Body() book: CreateBookDTO): Promise<Book> {
     return await this.bookService.createBook(book);
+  }
+
+  @Put(':id')
+  async updateBook(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateBookDTO: UpdateBookDTO,
+  ): Promise<Book> {
+    return await this.bookService.updateBook(id, updateBookDTO);
   }
 
   @Delete(':id')
