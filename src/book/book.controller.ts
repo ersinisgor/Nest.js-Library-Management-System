@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -27,5 +28,10 @@ export class BookController {
   @Post()
   async createBook(@Body() book: CreateBookDTO): Promise<Book> {
     return await this.bookService.createBook(book);
+  }
+
+  @Delete(':id')
+  async deleteBook(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.bookService.deleteBook(id);
   }
 }

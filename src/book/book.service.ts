@@ -41,4 +41,12 @@ export class BookService {
       throw error;
     }
   }
+
+  async deleteBook(id: number): Promise<void> {
+    const book = await this.booksRepository.findOneBy({ id });
+    if (!book) {
+      throw new NotFoundException(`Book with ID ${id} not found`);
+    }
+    await this.booksRepository.delete(id);
+  }
 }
