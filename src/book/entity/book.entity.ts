@@ -6,15 +6,15 @@ export class Book {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: false })
   title: string;
 
-  @Column()
+  @Column({ unique: true, nullable: false })
   isbn: string;
 
-  @Column()
+  @Column({ nullable: false, type: 'integer' })
   pageCount: number;
 
-  @Column({ default: true })
+  @Column({ default: true, nullable: false })
   isAvailable: boolean;
 }
