@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BookModule } from './book/book.module';
 import { Book } from './book/entity/book.entity';
+import { AuthorModule } from './author/author.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Book } from './book/entity/book.entity';
       inject: [ConfigService],
     }),
     BookModule,
+    AuthorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
