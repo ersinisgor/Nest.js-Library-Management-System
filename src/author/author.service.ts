@@ -43,4 +43,11 @@ export class AuthorService {
 
     return await this.authorRepository.save(existingAuthor);
   }
+
+  async deleteAuthor(id: number): Promise<void> {
+    const result = await this.authorRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Author with ID ${id} not found`);
+    }
+  }
 }

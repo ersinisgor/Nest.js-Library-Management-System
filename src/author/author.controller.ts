@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { AuthorService } from './author.service';
 import { CreateAuthorDTO } from './dto/author-create.dto';
 import { Author } from './entity/author.entity';
@@ -19,15 +27,20 @@ export class AuthorController {
   }
 
   @Get(':id')
-  async getAuthorById(@Param(':id') id: number): Promise<Author | null> {
+  async getAuthorById(@Param('id') id: number): Promise<Author | null> {
     return await this.authorService.getAuthorById(id);
   }
 
   @Put(':id')
   async updateAuthor(
-    @Param(':id') id: number,
+    @Param('id') id: number,
     @Body() updateAuthorDTO: UpdateAuthorDTO,
   ): Promise<Author> {
     return await this.authorService.updateAuthor(id, updateAuthorDTO);
+  }
+
+  @Delete(':id')
+  async deleteAuthor(@Param('id') id: number): Promise<void> {
+    return await this.authorService.deleteAuthor(id);
   }
 }
