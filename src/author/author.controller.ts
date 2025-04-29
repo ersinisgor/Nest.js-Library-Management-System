@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -27,20 +28,22 @@ export class AuthorController {
   }
 
   @Get(':id')
-  async getAuthorById(@Param('id') id: number): Promise<Author | null> {
+  async getAuthorById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<Author | null> {
     return await this.authorService.getAuthorById(id);
   }
 
   @Put(':id')
   async updateAuthor(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateAuthorDTO: UpdateAuthorDTO,
   ): Promise<Author> {
     return await this.authorService.updateAuthor(id, updateAuthorDTO);
   }
 
   @Delete(':id')
-  async deleteAuthor(@Param('id') id: number): Promise<void> {
+  async deleteAuthor(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return await this.authorService.deleteAuthor(id);
   }
 }
