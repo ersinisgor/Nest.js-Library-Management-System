@@ -20,11 +20,14 @@ export class BookService {
   ) {}
 
   async getAllBooks(): Promise<Book[]> {
-    return await this.booksRepository.find();
+    return await this.booksRepository.find({ relations: { author: true } });
   }
 
   async getBookById(id: number): Promise<Book> {
-    const book = await this.booksRepository.findOneBy({ id });
+    const book = await this.booksRepository.findOne({
+      where: { id },
+      relations: { author: true },
+    });
     if (!book) {
       throw new NotFoundException(`Book with ID ${id} not found`);
     }
