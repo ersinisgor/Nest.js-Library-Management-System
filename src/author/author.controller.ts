@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AuthorService } from './author.service';
 import { CreateAuthorDTO } from './dto/author-create.dto';
 import { Author } from './entity/author.entity';
@@ -9,11 +9,16 @@ export class AuthorController {
 
   @Post()
   async createAuthor(@Body() author: CreateAuthorDTO): Promise<Author> {
-    return this.authorService.createAuthor(author);
+    return await this.authorService.createAuthor(author);
   }
 
   @Get()
   async getAllAuthors(): Promise<Author[]> {
-    return this.authorService.getAllAuthors();
+    return await this.authorService.getAllAuthors();
+  }
+
+  @Get(':id')
+  async getAuthorById(@Param(':id') id: number): Promise<Author | null> {
+    return await this.authorService.getAuthorById(id);
   }
 }
