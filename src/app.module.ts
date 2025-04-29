@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BookModule } from './book/book.module';
 import { Book } from './book/entity/book.entity';
 import { AuthorModule } from './author/author.module';
+import { Author } from './author/entity/author.entity';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { AuthorModule } from './author/author.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [Book],
+        entities: [Book, Author],
         synchronize: true,
       }),
       inject: [ConfigService],
