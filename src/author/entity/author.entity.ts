@@ -1,6 +1,6 @@
 // author.entity.ts
 import { Book } from 'src/book/entity/book.entity';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Author {
@@ -13,6 +13,6 @@ export class Author {
   @Column({ nullable: true })
   biography?: string;
 
-  @Column()
+  @OneToMany(() => Book, (book) => book.author)
   books: Book[];
 }

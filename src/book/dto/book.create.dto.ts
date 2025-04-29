@@ -17,4 +17,8 @@ export class CreateBookDTO {
   @IsBoolean()
   @IsOptional()
   isAvailable: boolean;
+
+  @IsInt()
+  @IsNotEmpty()
+  authorId: number;
 }
