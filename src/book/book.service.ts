@@ -38,11 +38,11 @@ export class BookService {
     try {
       const id = createBookDTO.authorId;
       const author = await this.authorRepository.findOneBy({ id });
-
-      const createdBook = this.booksRepository.create(createBookDTO);
-      if (author) {
-        createdBook.author = author;
+      if (!author) {
+        throw new NotFoundException(`Author with ID ${id} not found`);
       }
+      const createdBook = this.booksRepository.create(createBookDTO);
+      createdBook.author = author;
 
       return await this.booksRepository.save(createdBook);
     } catch (error) {
@@ -58,7 +58,10 @@ export class BookService {
 
   async updateBook(id: number, updateBookDTO: UpdateBookDTO): Promise<Book> {
     try {
-      const book = await this.booksRepository.findOneBy({ id });
+      const book = await this.booksRepository.findOne({
+        where: { id },
+        relations: { author: true },
+      });
       if (!book) {
         throw new NotFoundException(`Book with ID ${id} not found`);
       }
