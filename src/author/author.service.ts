@@ -1,19 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateAuthorDTO } from './dto/author-create.dto';
 import { Repository } from 'typeorm';
 import { Author } from './entity/author.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateAuthorDTO } from './dto/author-update.dto';
+import { Book } from '../book/entity/book.entity';
 
 @Injectable()
 export class AuthorService {
   constructor(
     @InjectRepository(Author) private authorRepository: Repository<Author>,
+    @InjectRepository(Book) private bookRepository: Repository<Book>,
   ) {}
 
   async createAuthor(author: CreateAuthorDTO): Promise<Author> {
     const createdAuthor = this.authorRepository.create(author);
-
     return await this.authorRepository.save(createdAuthor);
   }
 
@@ -21,7 +26,7 @@ export class AuthorService {
     return await this.authorRepository.find({ relations: { books: true } });
   }
 
-  async getAuthorById(id: number): Promise<Author | null> {
+  async getAuthorById(id: number): Promise<Author> {
     const author = await this.authorRepository.findOne({
       where: { id },
       relations: { books: true },
@@ -37,17 +42,38 @@ export class AuthorService {
     updateAuthorDTO: UpdateAuthorDTO,
   ): Promise<Author> {
     const existingAuthor = await this.authorRepository.findOneBy({ id });
-
     if (!existingAuthor) {
       throw new NotFoundException(`Author with ID ${id} not found`);
     }
-
     Object.assign(existingAuthor, updateAuthorDTO);
-
     return await this.authorRepository.save(existingAuthor);
   }
 
   async deleteAuthor(id: number): Promise<void> {
+    const author = await this.authorRepository.findOne({
+      where: { id },
+      relations: { books: true },
+    });
+    if (!author) {
+      throw new NotFoundException(`Author with ID ${id} not found`);
+    }
+
+    const books = await this.bookRepository.find({ where: { author: { id } } });
+    if (books.length > 0) {
+      const unknownAuthor = await this.authorRepository.findOne({
+        where: { name: 'Unknown Author' },
+      });
+      if (!unknownAuthor) {
+        throw new BadRequestException(
+          'Unknown Author not found. Please create an Unknown Author first.',
+        );
+      }
+      await this.bookRepository.update(
+        { author: { id } },
+        { author: unknownAuthor },
+      );
+    }
+
     const result = await this.authorRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Author with ID ${id} not found`);
