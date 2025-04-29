@@ -54,12 +54,26 @@ export class BookService {
   }
 
   async updateBook(id: number, updateBookDTO: UpdateBookDTO): Promise<Book> {
-    const book = await this.booksRepository.findOneBy({ id });
-    if (!book) {
-      throw new NotFoundException(`Book with ID ${id} not found`);
-    }
     try {
-      Object.assign(book, updateBookDTO);
+      const book = await this.booksRepository.findOneBy({ id });
+      if (!book) {
+        throw new NotFoundException(`Book with ID ${id} not found`);
+      }
+
+      const { authorId, ...updateFields } = updateBookDTO;
+
+      if (authorId) {
+        const author = await this.authorRepository.findOne({
+          where: { id: authorId },
+        });
+        if (!author) {
+          throw new NotFoundException(`Author with ID ${authorId} not found`);
+        }
+        book.author = author;
+      }
+
+      Object.assign(book, updateFields);
+
       return await this.booksRepository.save(book);
     } catch (error) {
       if (error instanceof QueryFailedError) {
