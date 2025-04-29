@@ -8,12 +8,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { CreateBookDTO } from './dto/book.create.dto';
 import { UpdateBookDTO } from './dto/book.update.dto';
+import { Author } from 'src/author/entity/author.entity';
 
 @Injectable()
 export class BookService {
   constructor(
     @InjectRepository(Book)
     private booksRepository: Repository<Book>,
+    @InjectRepository(Author)
+    private authorRepository: Repository<Author>,
   ) {}
 
   async getAllBooks(): Promise<Book[]> {
@@ -28,9 +31,16 @@ export class BookService {
     return book;
   }
 
-  async createBook(book: CreateBookDTO): Promise<Book> {
+  async createBook(createBookDTO: CreateBookDTO): Promise<Book> {
     try {
-      const createdBook = this.booksRepository.create(book);
+      const id = createBookDTO.authorId;
+      const author = await this.authorRepository.findOneBy({ id });
+
+      const createdBook = this.booksRepository.create(createBookDTO);
+      if (author) {
+        createdBook.author = author;
+      }
+
       return await this.booksRepository.save(createdBook);
     } catch (error) {
       if (error instanceof QueryFailedError) {
