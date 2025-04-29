@@ -20,6 +20,7 @@ export class UpdateBookDTO {
   @IsOptional()
   isAvailable?: boolean;
 
+  @IsInt()
   @IsOptional()
   authorId: number;
 }
