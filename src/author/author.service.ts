@@ -15,4 +15,8 @@ export class AuthorService {
 
     return await this.authorRepository.save(createdAuthor);
   }
+
+  async getAllAuthors(): Promise<Author[]> {
+    return await this.authorRepository.find();
+  }
 }
