@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Book } from './entity/book.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -67,6 +68,13 @@ export class BookService {
       }
 
       const { authorId, ...updateFields } = updateBookDTO;
+
+      // Boş DTO kontrolü
+      if (!authorId && Object.keys(updateFields).length === 0) {
+        throw new BadRequestException(
+          'At least one field must be provided for update',
+        );
+      }
 
       if (authorId) {
         const author = await this.authorRepository.findOne({
