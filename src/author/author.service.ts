@@ -3,6 +3,7 @@ import { CreateAuthorDTO } from './dto/author-create.dto';
 import { Repository } from 'typeorm';
 import { Author } from './entity/author.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UpdateAuthorDTO } from './dto/author-update.dto';
 
 @Injectable()
 export class AuthorService {
@@ -23,8 +24,23 @@ export class AuthorService {
   async getAuthorById(id: number): Promise<Author | null> {
     const author = await this.authorRepository.findOneBy({ id });
     if (!author) {
-      throw new NotFoundException(`author with ID ${id} not found`);
+      throw new NotFoundException(`Author with ID ${id} not found`);
     }
     return author;
+  }
+
+  async updateAuthor(
+    id: number,
+    updateAuthorDTO: UpdateAuthorDTO,
+  ): Promise<Author> {
+    const existingAuthor = await this.authorRepository.findOneBy({ id });
+
+    if (!existingAuthor) {
+      throw new NotFoundException(`Author with ID ${id} not found`);
+    }
+
+    Object.assign(existingAuthor, updateAuthorDTO);
+
+    return await this.authorRepository.save(existingAuthor);
   }
 }
