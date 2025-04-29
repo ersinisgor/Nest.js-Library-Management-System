@@ -2,9 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { CreateAuthorDTO } from './dto/author-create.dto';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Author } from './entity/author.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateAuthorDTO } from './dto/author-update.dto';
@@ -18,8 +19,20 @@ export class AuthorService {
   ) {}
 
   async createAuthor(author: CreateAuthorDTO): Promise<Author> {
-    const createdAuthor = this.authorRepository.create(author);
-    return await this.authorRepository.save(createdAuthor);
+    try {
+      const createdAuthor = this.authorRepository.create(author);
+      return await this.authorRepository.save(createdAuthor);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { code?: string };
+        if (driverError.code === '23505') {
+          throw new ConflictException(
+            'An Author with this name already exists',
+          );
+        }
+      }
+      throw error;
+    }
   }
 
   async getAllAuthors(): Promise<Author[]> {
@@ -45,12 +58,24 @@ export class AuthorService {
     id: number,
     updateAuthorDTO: UpdateAuthorDTO,
   ): Promise<Author> {
-    const existingAuthor = await this.authorRepository.findOneBy({ id });
-    if (!existingAuthor) {
-      throw new NotFoundException(`Author with ID ${id} not found`);
+    try {
+      const existingAuthor = await this.authorRepository.findOneBy({ id });
+      if (!existingAuthor) {
+        throw new NotFoundException(`Author with ID ${id} not found`);
+      }
+      Object.assign(existingAuthor, updateAuthorDTO);
+      return await this.authorRepository.save(existingAuthor);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { code?: string };
+        if (driverError.code === '23505') {
+          throw new ConflictException(
+            'An Author with this name already exists',
+          );
+        }
+      }
+      throw error;
     }
-    Object.assign(existingAuthor, updateAuthorDTO);
-    return await this.authorRepository.save(existingAuthor);
   }
 
   async deleteAuthor(id: number): Promise<void> {
