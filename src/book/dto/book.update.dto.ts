@@ -19,4 +19,8 @@ export class UpdateBookDTO {
   @IsBoolean()
   @IsOptional()
   isAvailable?: boolean;
+
+  @IsInt()
+  @IsOptional()
+  authorId: number;
 }

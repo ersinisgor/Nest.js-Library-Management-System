@@ -1,5 +1,6 @@
 // book.entity.ts
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Author } from 'src/author/entity/author.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 
 @Entity()
 export class Book {
@@ -17,4 +18,7 @@ export class Book {
 
   @Column({ default: true, nullable: false })
   isAvailable: boolean;
+
+  @ManyToOne(() => Author, (author) => author.books, { nullable: false })
+  author: Author;
 }
