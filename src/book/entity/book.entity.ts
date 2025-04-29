@@ -19,6 +19,6 @@ export class Book {
   @Column({ default: true, nullable: false })
   isAvailable: boolean;
 
-  @ManyToOne(() => Author, (author) => author.books)
+  @ManyToOne(() => Author, (author) => author.books, { nullable: false })
   author: Author;
 }
