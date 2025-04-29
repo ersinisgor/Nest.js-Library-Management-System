@@ -52,6 +52,11 @@ export class BookService {
         if (driverError.code === '23505') {
           throw new ConflictException('A book with this ISBN already exists');
         }
+        if (driverError.code === '23503') {
+          throw new BadRequestException(
+            `Invalid author ID: ${createBookDTO.authorId} does not exist`,
+          );
+        }
       }
       throw error;
     }
