@@ -97,8 +97,10 @@ export class AuthorService {
       throw new NotFoundException(`Author with ID ${id} not found`);
     }
 
-    const books = await this.bookRepository.find({ where: { author: { id } } });
-    if (books.length > 0) {
+    const books = await this.bookRepository.count({
+      where: { author: { id } },
+    });
+    if (books > 0) {
       const unknownAuthor = await this.authorRepository.findOne({
         where: { name: 'Unknown Author' },
       });
@@ -107,10 +109,12 @@ export class AuthorService {
           'Unknown Author not found. Please create an Unknown Author first.',
         );
       }
-      await this.bookRepository.update(
-        { author: { id } },
-        { author: unknownAuthor },
-      );
+      await this.bookRepository
+        .createQueryBuilder()
+        .update(Book)
+        .set({ author: unknownAuthor })
+        .where('authorId = :id', { id })
+        .execute();
     }
 
     const result = await this.authorRepository.delete(id);
