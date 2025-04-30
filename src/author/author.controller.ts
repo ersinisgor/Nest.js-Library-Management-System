@@ -12,7 +12,7 @@ import { AuthorService } from './author.service';
 import { CreateAuthorDTO } from './dtos/author-create.dto';
 import { Author } from './entity/author.entity';
 import { UpdateAuthorDTO } from './dtos/author-update.dto';
-import { Book } from 'src/book/entity/book.entity';
+import { Book } from '../book/entity/book.entity';
 
 @Controller('author')
 export class AuthorController {
@@ -29,9 +29,7 @@ export class AuthorController {
   }
 
   @Get(':id')
-  async getAuthorById(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<Author | null> {
+  async getAuthorById(@Param('id', ParseIntPipe) id: number): Promise<Author> {
     return await this.authorService.getAuthorById(id);
   }
 
