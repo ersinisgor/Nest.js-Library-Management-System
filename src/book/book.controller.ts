@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Book } from './entity/book.entity';
-import { CreateBookDTO } from './dto/book.create.dto';
-import { UpdateBookDTO } from './dto/book.update.dto';
+import { CreateBookDTO } from './dtos/book-create.dto';
+import { UpdateBookDTO } from './dtos/book-update.dto';
 
 @Controller('book')
 export class BookController {

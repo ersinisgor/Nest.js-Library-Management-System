@@ -4,11 +4,11 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { CreateAuthorDTO } from './dto/author-create.dto';
+import { CreateAuthorDTO } from './dtos/author-create.dto';
 import { QueryFailedError, Repository } from 'typeorm';
 import { Author } from './entity/author.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UpdateAuthorDTO } from './dto/author-update.dto';
+import { UpdateAuthorDTO } from './dtos/author-update.dto';
 import { Book } from '../book/entity/book.entity';
 
 @Injectable()

@@ -7,8 +7,8 @@ import {
 import { Book } from './entity/book.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
-import { CreateBookDTO } from './dto/book.create.dto';
-import { UpdateBookDTO } from './dto/book.update.dto';
+import { CreateBookDTO } from './dtos/book-create.dto';
+import { UpdateBookDTO } from './dtos/book-update.dto';
 import { Author } from 'src/author/entity/author.entity';
 
 @Injectable()
