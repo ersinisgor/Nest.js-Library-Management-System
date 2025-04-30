@@ -1,10 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateAuthorDTO } from './author-create.dto';
 
-export class UpdateAuthorDTO {
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  biography?: string;
-}
+export class UpdateAuthorDTO extends PartialType(CreateAuthorDTO) {}
