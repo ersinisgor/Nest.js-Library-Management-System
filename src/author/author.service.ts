@@ -54,6 +54,12 @@ export class AuthorService {
     return author;
   }
 
+  async getBooksByAuthorId(id: number): Promise<Book[]> {
+    return await this.bookRepository.find({
+      where: { author: { id } },
+    });
+  }
+
   async updateAuthor(
     id: number,
     updateAuthorDTO: UpdateAuthorDTO,
