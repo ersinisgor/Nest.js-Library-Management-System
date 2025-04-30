@@ -1,3 +1,4 @@
+// src/book/book.service.ts
 import {
   Injectable,
   ConflictException,
@@ -9,15 +10,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { CreateBookDTO } from './dtos/book-create.dto';
 import { UpdateBookDTO } from './dtos/book-update.dto';
-import { Author } from 'src/author/entity/author.entity';
+import { AuthorService } from '../author/author.service';
 
 @Injectable()
 export class BookService {
   constructor(
-    @InjectRepository(Book)
-    private booksRepository: Repository<Book>,
-    @InjectRepository(Author)
-    private authorRepository: Repository<Author>,
+    @InjectRepository(Book) private booksRepository: Repository<Book>,
+    private authorService: AuthorService,
   ) {}
 
   async getAllBooks(): Promise<Book[]> {
@@ -39,13 +38,20 @@ export class BookService {
     return book;
   }
 
+  async getBooksByAuthorId(authorId: number): Promise<Book[]> {
+    await this.authorService.validateAuthorExists(authorId);
+    return await this.booksRepository.find({
+      where: { author: { id: authorId } },
+      relations: { author: true },
+      select: { id: true, title: true, author: { id: true, name: true } },
+    });
+  }
+
   async createBook(createBookDTO: CreateBookDTO): Promise<Book> {
     try {
-      const id = createBookDTO.authorId;
-      const author = await this.authorRepository.findOneBy({ id });
-      if (!author) {
-        throw new NotFoundException(`Author with ID ${id} not found`);
-      }
+      const author = await this.authorService.getAuthorById(
+        createBookDTO.authorId,
+      );
       const createdBook = this.booksRepository.create(createBookDTO);
       createdBook.author = author;
 
@@ -79,7 +85,6 @@ export class BookService {
 
       const { authorId, ...updateFields } = updateBookDTO;
 
-      // Boş DTO kontrolü
       if (!authorId && Object.keys(updateFields).length === 0) {
         throw new BadRequestException(
           'At least one field must be provided for update',
@@ -87,12 +92,7 @@ export class BookService {
       }
 
       if (authorId) {
-        const author = await this.authorRepository.findOne({
-          where: { id: authorId },
-        });
-        if (!author) {
-          throw new NotFoundException(`Author with ID ${authorId} not found`);
-        }
+        const author = await this.authorService.getAuthorById(authorId);
         book.author = author;
       }
 
@@ -119,6 +119,21 @@ export class BookService {
     const result = await this.booksRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Book with ID ${id} not found`);
+    }
+  }
+
+  async reassignBooksToUnknownAuthor(authorId: number): Promise<void> {
+    const booksCount = await this.booksRepository.count({
+      where: { author: { id: authorId } },
+    });
+    if (booksCount > 0) {
+      const unknownAuthor = await this.authorService.getUnknownAuthor();
+      await this.booksRepository
+        .createQueryBuilder()
+        .update(Book)
+        .set({ author: unknownAuthor })
+        .where('authorId = :id', { id: authorId })
+        .execute();
     }
   }
 }
