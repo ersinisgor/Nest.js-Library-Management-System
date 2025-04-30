@@ -21,13 +21,17 @@ export class BookService {
   ) {}
 
   async getAllBooks(): Promise<Book[]> {
-    return await this.booksRepository.find({ relations: { author: true } });
+    return await this.booksRepository.find({
+      relations: { author: true },
+      select: { author: { id: true, name: true } },
+    });
   }
 
   async getBookById(id: number): Promise<Book> {
     const book = await this.booksRepository.findOne({
       where: { id },
       relations: { author: true },
+      select: { author: { id: true, name: true } },
     });
     if (!book) {
       throw new NotFoundException(`Book with ID ${id} not found`);
@@ -67,6 +71,7 @@ export class BookService {
       const book = await this.booksRepository.findOne({
         where: { id },
         relations: { author: true },
+        select: { author: { id: true, name: true } },
       });
       if (!book) {
         throw new NotFoundException(`Book with ID ${id} not found`);
