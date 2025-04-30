@@ -59,7 +59,11 @@ export class AuthorService {
     updateAuthorDTO: UpdateAuthorDTO,
   ): Promise<Author> {
     try {
-      const existingAuthor = await this.authorRepository.findOneBy({ id });
+      const existingAuthor = await this.authorRepository.findOne({
+        where: { id },
+        relations: { books: true },
+        select: { books: { id: true, title: true } },
+      });
       if (!existingAuthor) {
         throw new NotFoundException(`Author with ID ${id} not found`);
       }
