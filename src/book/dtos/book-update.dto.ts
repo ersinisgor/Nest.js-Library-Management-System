@@ -22,5 +22,5 @@ export class UpdateBookDTO {
 
   @IsInt()
   @IsOptional()
-  authorId: number;
+  authorId?: number;
 }
