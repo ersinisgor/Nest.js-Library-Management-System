@@ -7,6 +7,7 @@ import { BookModule } from './book/book.module';
 import { Book } from './book/entity/book.entity';
 import { AuthorModule } from './author/author.module';
 import { Author } from './author/entity/author.entity';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { Author } from './author/entity/author.entity';
     }),
     BookModule,
     AuthorModule,
+    DatabaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
