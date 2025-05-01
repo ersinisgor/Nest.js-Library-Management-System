@@ -1,4 +1,3 @@
-import { IsEnum } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum UserRole {
@@ -25,6 +24,5 @@ export class User {
     enum: UserRole,
     default: UserRole.MEMBER,
   })
-  @IsEnum(UserRole)
   role: UserRole;
 }
