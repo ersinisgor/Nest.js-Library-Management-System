@@ -1,4 +1,3 @@
-// src/book/book.service.ts
 import {
   Injectable,
   ConflictException,
@@ -10,13 +9,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { CreateBookDTO } from './dtos/book-create.dto';
 import { UpdateBookDTO } from './dtos/book-update.dto';
-import { AuthorService } from '../author/author.service';
+import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class BookService {
   constructor(
     @InjectRepository(Book) private booksRepository: Repository<Book>,
-    private authorService: AuthorService,
+    private commonService: CommonService,
   ) {}
 
   async getAllBooks(): Promise<Book[]> {
@@ -39,22 +38,20 @@ export class BookService {
   }
 
   async getBooksByAuthorId(authorId: number): Promise<Book[]> {
-    await this.authorService.validateAuthorExists(authorId);
+    await this.commonService.validateAuthorExists(authorId);
     return await this.booksRepository.find({
       where: { author: { id: authorId } },
-      relations: { author: true },
-      select: { id: true, title: true, author: { id: true, name: true } },
+      select: { id: true, title: true },
     });
   }
 
   async createBook(createBookDTO: CreateBookDTO): Promise<Book> {
     try {
-      const author = await this.authorService.getAuthorById(
+      const author = await this.commonService.getAuthorById(
         createBookDTO.authorId,
       );
       const createdBook = this.booksRepository.create(createBookDTO);
       createdBook.author = author;
-
       return await this.booksRepository.save(createdBook);
     } catch (error) {
       if (error instanceof QueryFailedError) {
@@ -92,12 +89,11 @@ export class BookService {
       }
 
       if (authorId) {
-        const author = await this.authorService.getAuthorById(authorId);
+        const author = await this.commonService.getAuthorById(authorId);
         book.author = author;
       }
 
       Object.assign(book, updateFields);
-
       return await this.booksRepository.save(book);
     } catch (error) {
       if (error instanceof QueryFailedError) {
@@ -127,7 +123,7 @@ export class BookService {
       where: { author: { id: authorId } },
     });
     if (booksCount > 0) {
-      const unknownAuthor = await this.authorService.getUnknownAuthor();
+      const unknownAuthor = await this.commonService.getUnknownAuthor();
       await this.booksRepository
         .createQueryBuilder()
         .update(Book)
