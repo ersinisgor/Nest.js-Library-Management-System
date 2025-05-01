@@ -14,7 +14,7 @@ import { Author } from './entity/author.entity';
 import { UpdateAuthorDTO } from './dtos/author-update.dto';
 import { Book } from '../book/entity/book.entity';
 
-@Controller('author')
+@Controller('authors')
 export class AuthorController {
   constructor(private readonly authorService: AuthorService) {}
 

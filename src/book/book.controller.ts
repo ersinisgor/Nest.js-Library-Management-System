@@ -13,7 +13,7 @@ import { Book } from './entity/book.entity';
 import { CreateBookDTO } from './dtos/book-create.dto';
 import { UpdateBookDTO } from './dtos/book-update.dto';
 
-@Controller('book')
+@Controller('books')
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
