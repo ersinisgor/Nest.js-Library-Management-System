@@ -6,11 +6,11 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { CreateAuthorDTO } from './dtos/author-create.dto';
+import { CreateAuthorDTO } from './dtos/create-author.dto';
 import { QueryFailedError, Repository } from 'typeorm';
 import { Author } from './entity/author.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UpdateAuthorDTO } from './dtos/author-update.dto';
+import { UpdateAuthorDTO } from './dtos/update-author.dto';
 import { BookService } from '../book/book.service';
 import { Book } from '../book/entity/book.entity';
 
