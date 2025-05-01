@@ -1,7 +1,10 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   ConflictException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { CreateAuthorDTO } from './dtos/author-create.dto';
 import { QueryFailedError, Repository } from 'typeorm';
@@ -10,14 +13,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateAuthorDTO } from './dtos/author-update.dto';
 import { BookService } from '../book/book.service';
 import { Book } from '../book/entity/book.entity';
-import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class AuthorService {
   constructor(
     @InjectRepository(Author) private authorRepository: Repository<Author>,
+    @Inject(forwardRef(() => BookService))
     private readonly bookService: BookService,
-    private readonly commonService: CommonService,
   ) {}
 
   async createAuthor(author: CreateAuthorDTO): Promise<Author> {
@@ -45,19 +47,19 @@ export class AuthorService {
   }
 
   async getAuthorById(id: number): Promise<Author> {
-    return await this.commonService.getAuthorById(id);
+    const author = await this.authorRepository.findOne({
+      where: { id },
+      relations: { books: true },
+      select: { books: { id: true, title: true } },
+    });
+    if (!author) {
+      throw new NotFoundException(`Author with ID ${id} not found`);
+    }
+    return author;
   }
 
   async getBooksByAuthorId(id: number): Promise<Book[]> {
     return await this.bookService.getBooksByAuthorId(id);
-  }
-
-  async validateAuthorExists(id: number): Promise<void> {
-    await this.commonService.validateAuthorExists(id);
-  }
-
-  async getUnknownAuthor(): Promise<Author> {
-    return await this.commonService.getUnknownAuthor();
   }
 
   async updateAuthor(
@@ -95,5 +97,24 @@ export class AuthorService {
     if (result.affected === 0) {
       throw new NotFoundException(`Author with ID ${id} not found`);
     }
+  }
+
+  async validateAuthorExists(id: number): Promise<void> {
+    const author = await this.authorRepository.findOneBy({ id });
+    if (!author) {
+      throw new NotFoundException(`Author with ID ${id} not found`);
+    }
+  }
+
+  async getUnknownAuthor(): Promise<Author> {
+    const unknownAuthor = await this.authorRepository.findOne({
+      where: { name: 'Unknown Author' },
+    });
+    if (!unknownAuthor) {
+      throw new BadRequestException(
+        'Unknown Author not found. Please create an Unknown Author first.',
+      );
+    }
+    return unknownAuthor;
   }
 }

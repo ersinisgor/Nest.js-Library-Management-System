@@ -16,7 +16,7 @@ import { Book } from '../book/entity/book.entity';
 
 @Controller('author')
 export class AuthorController {
-  constructor(private authorService: AuthorService) {}
+  constructor(private readonly authorService: AuthorService) {}
 
   @Post()
   async createAuthor(@Body() author: CreateAuthorDTO): Promise<Author> {

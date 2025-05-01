@@ -3,19 +3,22 @@ import {
   ConflictException,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { Book } from './entity/book.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { CreateBookDTO } from './dtos/book-create.dto';
 import { UpdateBookDTO } from './dtos/book-update.dto';
-import { CommonService } from 'src/common/common.service';
+import { AuthorService } from '../author/author.service';
 
 @Injectable()
 export class BookService {
   constructor(
     @InjectRepository(Book) private booksRepository: Repository<Book>,
-    private readonly commonService: CommonService,
+    @Inject(forwardRef(() => AuthorService))
+    private readonly authorService: AuthorService,
   ) {}
 
   async getAllBooks(): Promise<Book[]> {
@@ -38,16 +41,17 @@ export class BookService {
   }
 
   async getBooksByAuthorId(authorId: number): Promise<Book[]> {
-    await this.commonService.validateAuthorExists(authorId);
+    await this.authorService.validateAuthorExists(authorId);
     return await this.booksRepository.find({
       where: { author: { id: authorId } },
-      select: { id: true, title: true },
+      relations: { author: true },
+      select: { id: true, title: true, author: { id: true, name: true } },
     });
   }
 
   async createBook(createBookDTO: CreateBookDTO): Promise<Book> {
     try {
-      const author = await this.commonService.getAuthorById(
+      const author = await this.authorService.getAuthorById(
         createBookDTO.authorId,
       );
       const createdBook = this.booksRepository.create(createBookDTO);
@@ -89,7 +93,7 @@ export class BookService {
       }
 
       if (authorId) {
-        const author = await this.commonService.getAuthorById(authorId);
+        const author = await this.authorService.getAuthorById(authorId);
         book.author = author;
       }
 
@@ -123,7 +127,7 @@ export class BookService {
       where: { author: { id: authorId } },
     });
     if (booksCount > 0) {
-      const unknownAuthor = await this.commonService.getUnknownAuthor();
+      const unknownAuthor = await this.authorService.getUnknownAuthor();
       await this.booksRepository
         .createQueryBuilder()
         .update(Book)

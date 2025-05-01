@@ -1,4 +1,3 @@
-// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BookModule } from './book/book.module';
@@ -8,7 +7,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Author } from './author/entity/author.entity';
 import { Book } from './book/entity/book.entity';
-import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
 
 @Module({
@@ -29,7 +27,6 @@ import { DatabaseModule } from './database/database.module';
       inject: [ConfigService],
     }),
     DatabaseModule,
-    CommonModule,
     BookModule,
     AuthorModule,
   ],
