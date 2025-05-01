@@ -10,6 +10,7 @@ import { Book } from './book/entity/book.entity';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { User } from './user/entity/user.entity';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { UserModule } from './user/user.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [Book, Author],
+        entities: [Book, Author, User],
         synchronize: true,
       }),
       inject: [ConfigService],
