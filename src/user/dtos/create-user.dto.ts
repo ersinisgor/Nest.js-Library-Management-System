@@ -17,10 +17,6 @@ export class CreateUserDTO {
   @IsNotEmpty()
   email: string;
 
-  @IsNotEmpty()
-  @IsString()
-  password: string;
-
   @IsOptional()
   @IsEnum(UserRole)
   @Transform(({ value }) => (value as UserRole) ?? UserRole.MEMBER)
