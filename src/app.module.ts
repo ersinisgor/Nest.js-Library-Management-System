@@ -5,12 +5,9 @@ import { AuthorModule } from './author/author.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { Author } from './author/entity/author.entity';
-import { Book } from './book/entity/book.entity';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { User } from './user/entity/user.entity';
 
 @Module({
   imports: [
@@ -24,7 +21,7 @@ import { User } from './user/entity/user.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [Book, Author, User],
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
       }),
       inject: [ConfigService],
