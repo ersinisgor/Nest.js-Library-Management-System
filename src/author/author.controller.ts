@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Post,
@@ -49,6 +50,7 @@ export class AuthorController {
   }
 
   @Delete(':id')
+  @HttpCode(204)
   async deleteAuthor(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return await this.authorService.deleteAuthor(id);
   }

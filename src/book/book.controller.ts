@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Post,
@@ -41,6 +42,7 @@ export class BookController {
   }
 
   @Delete(':id')
+  @HttpCode(204)
   async deleteBook(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.bookService.deleteBook(id);
   }
