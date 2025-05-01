@@ -15,7 +15,7 @@ import { CommonService } from 'src/common/common.service';
 export class BookService {
   constructor(
     @InjectRepository(Book) private booksRepository: Repository<Book>,
-    private commonService: CommonService,
+    private readonly commonService: CommonService,
   ) {}
 
   async getAllBooks(): Promise<Book[]> {

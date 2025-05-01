@@ -16,8 +16,8 @@ import { CommonService } from 'src/common/common.service';
 export class AuthorService {
   constructor(
     @InjectRepository(Author) private authorRepository: Repository<Author>,
-    private bookService: BookService,
-    private commonService: CommonService,
+    private readonly bookService: BookService,
+    private readonly commonService: CommonService,
   ) {}
 
   async createAuthor(author: CreateAuthorDTO): Promise<Author> {
