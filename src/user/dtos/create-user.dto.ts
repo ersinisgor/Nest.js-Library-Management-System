@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateUserDTO {
   @IsNotEmpty()
@@ -22,5 +23,6 @@ export class CreateUserDTO {
 
   @IsOptional()
   @IsEnum(UserRole)
-  role: UserRole = UserRole.MEMBER;
+  @Transform(({ value }) => (value as UserRole) ?? UserRole.MEMBER)
+  role: UserRole;
 }
