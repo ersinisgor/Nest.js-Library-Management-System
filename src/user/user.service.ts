@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -50,6 +51,12 @@ export class UserService {
 
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
+      }
+
+      if (Object.keys(updateUserDTO).length === 0) {
+        throw new BadRequestException(
+          'At least one field must be provided for update',
+        );
       }
 
       Object.assign(user, updateUserDTO);
