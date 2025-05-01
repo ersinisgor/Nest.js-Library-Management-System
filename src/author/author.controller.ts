@@ -20,6 +20,7 @@ export class AuthorController {
   constructor(private readonly authorService: AuthorService) {}
 
   @Post()
+  @HttpCode(201)
   async createAuthor(@Body() author: CreateAuthorDTO): Promise<Author> {
     return await this.authorService.createAuthor(author);
   }

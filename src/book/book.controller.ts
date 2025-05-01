@@ -29,6 +29,7 @@ export class BookController {
   }
 
   @Post()
+  @HttpCode(201)
   async createBook(@Body() book: CreateBookDTO): Promise<Book> {
     return await this.bookService.createBook(book);
   }
