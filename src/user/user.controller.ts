@@ -13,6 +13,7 @@ import { CreateUserDTO } from './dtos/create-user.dto';
 import { UserService } from './user.service';
 import { User } from './entity/user.entity';
 import { UpdateUserDTO } from './dtos/update-user.dto';
+import { UserResponseDTO } from './dtos/user-response.dto';
 
 @Controller('users')
 export class UserController {
@@ -30,7 +31,9 @@ export class UserController {
 
   @Post()
   @HttpCode(201)
-  async createUser(@Body() createUserDTO: CreateUserDTO): Promise<User> {
+  async createUser(
+    @Body() createUserDTO: CreateUserDTO,
+  ): Promise<UserResponseDTO> {
     return await this.userService.createUser(createUserDTO);
   }
 

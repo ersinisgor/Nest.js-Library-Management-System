@@ -9,6 +9,8 @@ import { User } from './entity/user.entity';
 import { QueryFailedError, Repository } from 'typeorm';
 import { CreateUserDTO } from './dtos/create-user.dto';
 import { UpdateUserDTO } from './dtos/update-user.dto';
+import { plainToClass } from 'class-transformer';
+import { UserResponseDTO } from './dtos/user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -16,15 +18,19 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
-  async createUser(createUserDTO: CreateUserDTO): Promise<User> {
+  async createUser(createUserDTO: CreateUserDTO): Promise<UserResponseDTO> {
     try {
       const user = this.userRepository.create(createUserDTO);
-      return await this.userRepository.save(user);
+      const createdUser = await this.userRepository.save(user);
+      return plainToClass(UserResponseDTO, createdUser);
     } catch (error) {
       if (error instanceof QueryFailedError) {
         const driverError = error.driverError as { code?: string };
         if (driverError.code === '23505') {
           throw new ConflictException('A User with this email already exists');
+        }
+        if (driverError.code === '23502') {
+          throw new BadRequestException('Required fields cannot be null');
         }
       }
       throw error;
