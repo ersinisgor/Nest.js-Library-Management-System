@@ -1,9 +1,11 @@
+import { Borrow } from '../../borrows/entity/borrow.entity';
 import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 export enum UserRole {
@@ -40,4 +42,7 @@ export class User {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @OneToMany(() => Borrow, (borrow) => borrow.user)
+  borrows: Borrow[];
 }
