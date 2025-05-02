@@ -37,8 +37,9 @@ export class UserService {
     }
   }
 
-  async getAllUsers(): Promise<User[]> {
-    return await this.userRepository.find();
+  async getAllUsers(): Promise<UserResponseDTO[]> {
+    const users = await this.userRepository.find();
+    return users.map((user) => plainToClass(UserResponseDTO, user));
   }
 
   async getUserById(id: number): Promise<User> {
