@@ -58,27 +58,31 @@ export class UserService {
     return user;
   }
 
-  async updateUser(id: number, updateUserDTO: UpdateUserDTO): Promise<User> {
+  async updateUser(
+    id: number,
+    updateUserDTO: UpdateUserDTO,
+  ): Promise<UserResponseDTO> {
     try {
       const user = await this.userRepository.findOneBy({ id });
-
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
-
       if (Object.keys(updateUserDTO).length === 0) {
         throw new BadRequestException(
           'At least one field must be provided for update',
         );
       }
-
       Object.assign(user, updateUserDTO);
-      return await this.userRepository.save(user);
+      const updatedUser = await this.userRepository.save(user);
+      return plainToClass(UserResponseDTO, updatedUser);
     } catch (error) {
       if (error instanceof QueryFailedError) {
         const driverError = error.driverError as { code?: string };
         if (driverError.code === '23505') {
           throw new ConflictException('A User with this email already exists');
+        }
+        if (driverError.code === '23502') {
+          throw new BadRequestException('Required fields cannot be null');
         }
       }
       throw error;
