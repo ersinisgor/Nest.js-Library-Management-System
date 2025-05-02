@@ -25,7 +25,9 @@ export class UserController {
   }
 
   @Get(':id')
-  async getUserById(@Param('id', ParseIntPipe) id: number): Promise<User> {
+  async getUserById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<UserResponseDTO> {
     return await this.userService.getUserById(id);
   }
 

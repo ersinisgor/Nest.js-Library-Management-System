@@ -42,14 +42,12 @@ export class UserService {
     return users.map((user) => plainToClass(UserResponseDTO, user));
   }
 
-  async getUserById(id: number): Promise<User> {
+  async getUserById(id: number): Promise<UserResponseDTO> {
     const user = await this.userRepository.findOneBy({ id });
-
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-
-    return user;
+    return plainToClass(UserResponseDTO, user);
   }
 
   async findByEmail(email: string): Promise<User> {
