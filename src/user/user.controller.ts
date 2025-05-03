@@ -6,10 +6,8 @@ import {
   HttpCode,
   Param,
   ParseIntPipe,
-  Post,
   Put,
 } from '@nestjs/common';
-import { CreateUserDTO } from './dtos/create-user.dto';
 import { UserService } from './user.service';
 import { UpdateUserDTO } from './dtos/update-user.dto';
 import { UserResponseDTO } from './dtos/user-response.dto';
@@ -28,14 +26,6 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<UserResponseDTO> {
     return await this.userService.getUserById(id);
-  }
-
-  @Post()
-  @HttpCode(201)
-  async createUser(
-    @Body() createUserDTO: CreateUserDTO,
-  ): Promise<UserResponseDTO> {
-    return await this.userService.createUser(createUserDTO);
   }
 
   @Put(':id')
