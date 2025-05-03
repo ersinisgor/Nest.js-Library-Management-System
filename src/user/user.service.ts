@@ -1,26 +1,31 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
 import { QueryFailedError, Repository } from 'typeorm';
-import { CreateUserDTO } from './dtos/create-user.dto';
 import { UpdateUserDTO } from './dtos/update-user.dto';
 import { plainToClass } from 'class-transformer';
 import { UserResponseDTO } from './dtos/user-response.dto';
+import { AuthService } from '../auth/auth.service';
+import { RegisterDTO } from '../auth/dtos/register.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) {}
 
-  async createUser(createUserDTO: CreateUserDTO): Promise<UserResponseDTO> {
+  async createUser(registerDTO: RegisterDTO): Promise<UserResponseDTO> {
     try {
-      const user = this.userRepository.create(createUserDTO);
+      const user = this.userRepository.create(registerDTO);
       const createdUser = await this.userRepository.save(user);
       return plainToClass(UserResponseDTO, createdUser);
     } catch (error) {
@@ -56,6 +61,11 @@ export class UserService {
       throw new NotFoundException(`User with email ${email} not found`);
     }
     return user;
+  }
+
+  async checkIfTheEmailAddressExists(email: string): Promise<boolean> {
+    const emailExist = await this.userRepository.exists({ where: { email } });
+    return emailExist;
   }
 
   async updateUser(
