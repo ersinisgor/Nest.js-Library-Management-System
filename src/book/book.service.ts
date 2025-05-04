@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Inject,
   forwardRef,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { Book } from './entity/book.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,31 +23,54 @@ export class BookService {
   ) {}
 
   async getAllBooks(): Promise<Book[]> {
-    return await this.booksRepository.find({
-      relations: { author: true },
-      select: { author: { id: true, name: true } },
-    });
+    try {
+      return await this.booksRepository.find({
+        relations: { author: true },
+        select: { author: { id: true, name: true } },
+      });
+    } catch (error) {
+      console.error('Error retrieving books:', error);
+      throw new InternalServerErrorException('Failed to retrieve books');
+    }
   }
 
   async getBookById(id: number): Promise<Book> {
-    const book = await this.booksRepository.findOne({
-      where: { id },
-      relations: { author: true },
-      select: { author: { id: true, name: true } },
-    });
-    if (!book) {
-      throw new NotFoundException(`Book with ID ${id} not found`);
+    try {
+      const book = await this.booksRepository.findOne({
+        where: { id },
+        relations: { author: true },
+        select: { author: { id: true, name: true } },
+      });
+      if (!book) {
+        throw new NotFoundException(`Book with ID ${id} not found`);
+      }
+      return book;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error retrieving book:', error);
+      throw new InternalServerErrorException('Failed to retrieve book');
     }
-    return book;
   }
 
   async getBooksByAuthorId(authorId: number): Promise<Book[]> {
-    await this.authorService.validateAuthorExists(authorId);
-    return await this.booksRepository.find({
-      where: { author: { id: authorId } },
-      relations: { author: true },
-      select: { id: true, title: true, author: { id: true, name: true } },
-    });
+    try {
+      await this.authorService.validateAuthorExists(authorId);
+      return await this.booksRepository.find({
+        where: { author: { id: authorId } },
+        relations: { author: true },
+        select: { id: true, title: true, author: { id: true, name: true } },
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error retrieving books by author:', error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve books by author',
+      );
+    }
   }
 
   async createBook(createBookDTO: CreateBookDTO): Promise<Book> {
@@ -69,7 +93,11 @@ export class BookService {
           );
         }
       }
-      throw error;
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error creating book:', error);
+      throw new InternalServerErrorException('Failed to create book');
     }
   }
 
@@ -111,29 +139,49 @@ export class BookService {
           );
         }
       }
-      throw error;
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      console.error('Error updating book:', error);
+      throw new InternalServerErrorException('Failed to update book');
     }
   }
 
   async deleteBook(id: number): Promise<void> {
-    const result = await this.booksRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Book with ID ${id} not found`);
+    try {
+      const result = await this.booksRepository.delete(id);
+      if (result.affected === 0) {
+        throw new NotFoundException(`Book with ID ${id} not found`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error deleting book:', error);
+      throw new InternalServerErrorException('Failed to delete book');
     }
   }
 
   async reassignBooksToUnknownAuthor(authorId: number): Promise<void> {
-    const booksCount = await this.booksRepository.count({
-      where: { author: { id: authorId } },
-    });
-    if (booksCount > 0) {
-      const unknownAuthor = await this.authorService.getUnknownAuthor();
-      await this.booksRepository
-        .createQueryBuilder()
-        .update(Book)
-        .set({ author: unknownAuthor })
-        .where('authorId = :id', { id: authorId })
-        .execute();
+    try {
+      const booksCount = await this.booksRepository.count({
+        where: { author: { id: authorId } },
+      });
+      if (booksCount > 0) {
+        const unknownAuthor = await this.authorService.getUnknownAuthor();
+        await this.booksRepository
+          .createQueryBuilder()
+          .update(Book)
+          .set({ author: unknownAuthor })
+          .where('authorId = :id', { id: authorId })
+          .execute();
+      }
+    } catch (error) {
+      console.error('Error reassigning books:', error);
+      throw new InternalServerErrorException('Failed to reassign books');
     }
   }
 }
