@@ -8,6 +8,10 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  InternalServerErrorException,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Book } from './entity/book.entity';
@@ -20,18 +24,43 @@ export class BookController {
 
   @Get()
   async getAllBooks(): Promise<Book[]> {
-    return await this.bookService.getAllBooks();
+    try {
+      return await this.bookService.getAllBooks();
+    } catch (error) {
+      console.error('Error in getAllBooks:', error);
+      throw new InternalServerErrorException('Failed to retrieve books');
+    }
   }
 
   @Get(':id')
   async getBookById(@Param('id', ParseIntPipe) id: number): Promise<Book> {
-    return await this.bookService.getBookById(id);
+    try {
+      return await this.bookService.getBookById(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error in getBookById:', error);
+      throw new InternalServerErrorException('Failed to retrieve book');
+    }
   }
 
   @Post()
   @HttpCode(201)
   async createBook(@Body() book: CreateBookDTO): Promise<Book> {
-    return await this.bookService.createBook(book);
+    try {
+      return await this.bookService.createBook(book);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      console.error('Error in createBook:', error);
+      throw new InternalServerErrorException('Failed to create book');
+    }
   }
 
   @Put(':id')
@@ -39,12 +68,32 @@ export class BookController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBookDTO: UpdateBookDTO,
   ): Promise<Book> {
-    return await this.bookService.updateBook(id, updateBookDTO);
+    try {
+      return await this.bookService.updateBook(id, updateBookDTO);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      console.error('Error in updateBook:', error);
+      throw new InternalServerErrorException('Failed to update book');
+    }
   }
 
   @Delete(':id')
   @HttpCode(204)
   async deleteBook(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    await this.bookService.deleteBook(id);
+    try {
+      await this.bookService.deleteBook(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error in deleteBook:', error);
+      throw new InternalServerErrorException('Failed to delete book');
+    }
   }
 }
