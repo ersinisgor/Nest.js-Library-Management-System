@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
@@ -38,31 +39,55 @@ export class UserService {
           throw new BadRequestException('Required fields cannot be null');
         }
       }
-      throw error;
+      console.error('Error creating user:', error);
+      throw new InternalServerErrorException('Failed to create user');
     }
   }
 
   async getAllUsers(): Promise<UserResponseDTO[]> {
-    const users = await this.userRepository.find();
-    return users.map((user) => plainToClass(UserResponseDTO, user));
+    try {
+      const users = await this.userRepository.find();
+      return users.map((user) => plainToClass(UserResponseDTO, user));
+    } catch (error) {
+      console.error('Error retrieving users:', error);
+      throw new InternalServerErrorException('Failed to retrieve users');
+    }
   }
 
   async getUserById(id: number): Promise<UserResponseDTO> {
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+    try {
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+      return plainToClass(UserResponseDTO, user);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error retrieving user:', error);
+      throw new InternalServerErrorException('Failed to retrieve user');
     }
-    return plainToClass(UserResponseDTO, user);
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({ where: { email } });
-    return user || null;
+    try {
+      const user = await this.userRepository.findOne({ where: { email } });
+      return user || null;
+    } catch (error) {
+      console.error('Error finding user by email:', error);
+      throw new InternalServerErrorException('Failed to find user by email');
+    }
   }
 
   async checkEmailExists(email: string): Promise<boolean> {
-    const emailExist = await this.userRepository.exists({ where: { email } });
-    return emailExist;
+    try {
+      const emailExist = await this.userRepository.exists({ where: { email } });
+      return emailExist;
+    } catch (error) {
+      console.error('Error checking email existence:', error);
+      throw new InternalServerErrorException('Failed to check email existence');
+    }
   }
 
   async updateUser(
@@ -87,8 +112,6 @@ export class UserService {
         user.isActive = updateUserDTO.isActive;
 
       const updatedUser = await this.userRepository.save(user);
-      console.log('Updated user:', updatedUser);
-
       return plainToClass(UserResponseDTO, updatedUser);
     } catch (error) {
       if (error instanceof QueryFailedError) {
@@ -100,14 +123,29 @@ export class UserService {
           throw new BadRequestException('Required fields cannot be null');
         }
       }
-      throw error;
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      console.error('Error updating user:', error);
+      throw new InternalServerErrorException('Failed to update user');
     }
   }
 
   async deleteUser(id: number): Promise<void> {
-    const result = await this.userRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+    try {
+      const result = await this.userRepository.delete(id);
+      if (result.affected === 0) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error deleting user:', error);
+      throw new InternalServerErrorException('Failed to delete user');
     }
   }
 }
