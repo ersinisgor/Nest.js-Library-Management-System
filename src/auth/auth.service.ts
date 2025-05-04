@@ -11,7 +11,7 @@ import { UserService } from '../user/user.service';
 import { RegisterDTO } from './dtos/register.dto';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDTO } from '../user/dtos/user-response.dto';
-import { UserRole } from 'src/user/entity/user.entity';
+import { UserRole } from '../user/entity/user.entity';
 import { LoginDTO } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -27,31 +27,42 @@ export class AuthService {
   private saltRounds: number = 10;
 
   async register(registerDTO: RegisterDTO): Promise<UserResponseDTO> {
-    const userExist = await this.userService.checkEmailExists(
-      registerDTO.email,
-    );
-
-    if (userExist) {
-      throw new ConflictException(
-        `User with ${registerDTO.email} email address already exists`,
+    try {
+      const userExist = await this.userService.checkEmailExists(
+        registerDTO.email,
       );
+
+      if (userExist) {
+        throw new ConflictException(
+          `User with ${registerDTO.email} email address already exists`,
+        );
+      }
+
+      if (registerDTO.role && registerDTO.role !== UserRole.MEMBER) {
+        throw new BadRequestException('Users can only register as MEMBER');
+      }
+
+      const hashedPassword = await this.hashPassword(
+        registerDTO.password,
+        this.saltRounds,
+      );
+
+      const userData: RegisterDTO = {
+        ...registerDTO,
+        password: hashedPassword,
+      };
+
+      return await this.userService.createUser(userData);
+    } catch (error) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      console.error('Error registering user:', error);
+      throw new InternalServerErrorException('Failed to register user');
     }
-
-    if (registerDTO.role && registerDTO.role !== UserRole.MEMBER) {
-      throw new BadRequestException('Users can only register as MEMBER');
-    }
-
-    const hashedPassword = await this.hashPassword(
-      registerDTO.password,
-      this.saltRounds,
-    );
-
-    const userData: RegisterDTO = {
-      ...registerDTO,
-      password: hashedPassword,
-    };
-
-    return await this.userService.createUser(userData);
   }
 
   async login(loginDTO: LoginDTO): Promise<LoginResponseDto> {
@@ -77,11 +88,17 @@ export class AuthService {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
+      console.error('Error logging in:', error);
       throw new InternalServerErrorException('Failed to login');
     }
   }
 
   private async hashPassword(password: string, salt: number): Promise<string> {
-    return bcrypt.hash(password, salt);
+    try {
+      return await bcrypt.hash(password, salt);
+    } catch (error) {
+      console.error('Error hashing password:', error);
+      throw new InternalServerErrorException('Failed to hash password');
+    }
   }
 }
