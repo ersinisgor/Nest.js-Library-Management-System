@@ -5,6 +5,7 @@ import {
   ConflictException,
   Inject,
   forwardRef,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CreateAuthorDTO } from './dtos/create-author.dto';
 import { QueryFailedError, Repository } from 'typeorm';
@@ -35,31 +36,55 @@ export class AuthorService {
           );
         }
       }
-      throw error;
+      console.error('Error creating author:', error);
+      throw new InternalServerErrorException('Failed to create author');
     }
   }
 
   async getAllAuthors(): Promise<Author[]> {
-    return await this.authorRepository.find({
-      relations: { books: true },
-      select: { books: { id: true, title: true } },
-    });
+    try {
+      return await this.authorRepository.find({
+        relations: { books: true },
+        select: { books: { id: true, title: true } },
+      });
+    } catch (error) {
+      console.error('Error retrieving authors:', error);
+      throw new InternalServerErrorException('Failed to retrieve authors');
+    }
   }
 
   async getAuthorById(id: number): Promise<Author> {
-    const author = await this.authorRepository.findOne({
-      where: { id },
-      relations: { books: true },
-      select: { books: { id: true, title: true } },
-    });
-    if (!author) {
-      throw new NotFoundException(`Author with ID ${id} not found`);
+    try {
+      const author = await this.authorRepository.findOne({
+        where: { id },
+        relations: { books: true },
+        select: { books: { id: true, title: true } },
+      });
+      if (!author) {
+        throw new NotFoundException(`Author with ID ${id} not found`);
+      }
+      return author;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error retrieving author:', error);
+      throw new InternalServerErrorException('Failed to retrieve author');
     }
-    return author;
   }
 
   async getBooksByAuthorId(id: number): Promise<Book[]> {
-    return await this.bookService.getBooksByAuthorId(id);
+    try {
+      return await this.bookService.getBooksByAuthorId(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error retrieving books by author:', error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve books by author',
+      );
+    }
   }
 
   async updateAuthor(
@@ -86,35 +111,65 @@ export class AuthorService {
           );
         }
       }
-      throw error;
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error updating author:', error);
+      throw new InternalServerErrorException('Failed to update author');
     }
   }
 
   async deleteAuthor(id: number): Promise<void> {
-    await this.validateAuthorExists(id);
-    await this.bookService.reassignBooksToUnknownAuthor(id);
-    const result = await this.authorRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Author with ID ${id} not found`);
+    try {
+      await this.validateAuthorExists(id);
+      await this.bookService.reassignBooksToUnknownAuthor(id);
+      const result = await this.authorRepository.delete(id);
+      if (result.affected === 0) {
+        throw new NotFoundException(`Author with ID ${id} not found`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error deleting author:', error);
+      throw new InternalServerErrorException('Failed to delete author');
     }
   }
 
   async validateAuthorExists(id: number): Promise<void> {
-    const author = await this.authorRepository.findOneBy({ id });
-    if (!author) {
-      throw new NotFoundException(`Author with ID ${id} not found`);
+    try {
+      const author = await this.authorRepository.findOneBy({ id });
+      if (!author) {
+        throw new NotFoundException(`Author with ID ${id} not found`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error validating author:', error);
+      throw new InternalServerErrorException('Failed to validate author');
     }
   }
 
   async getUnknownAuthor(): Promise<Author> {
-    const unknownAuthor = await this.authorRepository.findOne({
-      where: { name: 'Unknown Author' },
-    });
-    if (!unknownAuthor) {
-      throw new BadRequestException(
-        'Unknown Author not found. Please create an Unknown Author first.',
+    try {
+      const unknownAuthor = await this.authorRepository.findOne({
+        where: { name: 'Unknown Author' },
+      });
+      if (!unknownAuthor) {
+        throw new BadRequestException(
+          'Unknown Author not found. Please create an Unknown Author first.',
+        );
+      }
+      return unknownAuthor;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      console.error('Error retrieving unknown author:', error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve unknown author',
       );
     }
-    return unknownAuthor;
   }
 }
