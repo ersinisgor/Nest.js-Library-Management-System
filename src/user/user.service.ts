@@ -48,22 +48,19 @@ export class UserService {
   }
 
   async getUserById(id: number): Promise<UserResponseDTO> {
-    const user = await this.userRepository.findOneBy({ id });
+    const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
     return plainToClass(UserResponseDTO, user);
   }
 
-  async findByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOneBy({ email });
-    if (!user) {
-      throw new NotFoundException(`User with email ${email} not found`);
-    }
-    return user;
+  async findUserByEmail(email: string): Promise<User | null> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    return user || null;
   }
 
-  async checkIfTheEmailAddressExists(email: string): Promise<boolean> {
+  async checkEmailExists(email: string): Promise<boolean> {
     const emailExist = await this.userRepository.exists({ where: { email } });
     return emailExist;
   }
@@ -73,7 +70,7 @@ export class UserService {
     updateUserDTO: UpdateUserDTO,
   ): Promise<UserResponseDTO> {
     try {
-      const user = await this.userRepository.findOneBy({ id });
+      const user = await this.userRepository.findOne({ where: { id } });
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
@@ -82,8 +79,16 @@ export class UserService {
           'At least one field must be provided for update',
         );
       }
-      Object.assign(user, updateUserDTO);
+
+      if (updateUserDTO.name !== undefined) user.name = updateUserDTO.name;
+      if (updateUserDTO.email !== undefined) user.email = updateUserDTO.email;
+      if (updateUserDTO.role !== undefined) user.role = updateUserDTO.role;
+      if (updateUserDTO.isActive !== undefined)
+        user.isActive = updateUserDTO.isActive;
+
       const updatedUser = await this.userRepository.save(user);
+      console.log('Updated user:', updatedUser);
+
       return plainToClass(UserResponseDTO, updatedUser);
     } catch (error) {
       if (error instanceof QueryFailedError) {
