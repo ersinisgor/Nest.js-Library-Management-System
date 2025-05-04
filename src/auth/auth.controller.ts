@@ -5,7 +5,9 @@ import {
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
+  ConflictException,
   Post,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDTO } from './dtos/register.dto';
@@ -20,7 +22,18 @@ export class AuthController {
   @Post('register')
   @HttpCode(201)
   async register(@Body() registerDTO: RegisterDTO): Promise<UserResponseDTO> {
-    return await this.authService.register(registerDTO);
+    try {
+      return await this.authService.register(registerDTO);
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      console.error('Error in register:', error);
+      throw new InternalServerErrorException('Failed to register user');
+    }
   }
 
   @Post('login')
@@ -29,9 +42,13 @@ export class AuthController {
     try {
       return await this.authService.login(loginDTO);
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof UnauthorizedException
+      ) {
         throw error;
       }
+      console.error('Error in login:', error);
       throw new InternalServerErrorException('Failed to login');
     }
   }
