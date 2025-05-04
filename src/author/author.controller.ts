@@ -8,6 +8,9 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  InternalServerErrorException,
+  NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { AuthorService } from './author.service';
 import { CreateAuthorDTO } from './dtos/create-author.dto';
@@ -22,24 +25,55 @@ export class AuthorController {
   @Post()
   @HttpCode(201)
   async createAuthor(@Body() author: CreateAuthorDTO): Promise<Author> {
-    return await this.authorService.createAuthor(author);
+    try {
+      return await this.authorService.createAuthor(author);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      console.error('Error in createAuthor:', error);
+      throw new InternalServerErrorException('Failed to create author');
+    }
   }
 
   @Get()
   async getAllAuthors(): Promise<Author[]> {
-    return await this.authorService.getAllAuthors();
+    try {
+      return await this.authorService.getAllAuthors();
+    } catch (error) {
+      console.error('Error in getAllAuthors:', error);
+      throw new InternalServerErrorException('Failed to retrieve authors');
+    }
   }
 
   @Get(':id')
   async getAuthorById(@Param('id', ParseIntPipe) id: number): Promise<Author> {
-    return await this.authorService.getAuthorById(id);
+    try {
+      return await this.authorService.getAuthorById(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error in getAuthorById:', error);
+      throw new InternalServerErrorException('Failed to retrieve author');
+    }
   }
 
   @Get(':id/books')
   async getBooksByAuthorId(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Book[]> {
-    return await this.authorService.getBooksByAuthorId(id);
+    try {
+      return await this.authorService.getBooksByAuthorId(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error in getBooksByAuthorId:', error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve books by author',
+      );
+    }
   }
 
   @Put(':id')
@@ -47,12 +81,31 @@ export class AuthorController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAuthorDTO: UpdateAuthorDTO,
   ): Promise<Author> {
-    return await this.authorService.updateAuthor(id, updateAuthorDTO);
+    try {
+      return await this.authorService.updateAuthor(id, updateAuthorDTO);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      console.error('Error in updateAuthor:', error);
+      throw new InternalServerErrorException('Failed to update author');
+    }
   }
 
   @Delete(':id')
   @HttpCode(204)
   async deleteAuthor(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return await this.authorService.deleteAuthor(id);
+    try {
+      return await this.authorService.deleteAuthor(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error in deleteAuthor:', error);
+      throw new InternalServerErrorException('Failed to delete author');
+    }
   }
 }
