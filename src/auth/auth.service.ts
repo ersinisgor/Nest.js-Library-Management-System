@@ -4,22 +4,30 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { RegisterDTO } from './dtos/register.dto';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDTO } from '../user/dtos/user-response.dto';
 import { UserRole } from 'src/user/entity/user.entity';
+import { LoginDTO } from './dtos/login.dto';
+import { LoginResponseDto } from './dtos/login-response.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+    private jwtService: JwtService,
   ) {}
 
+  private saltRounds: number = 10;
+
   async register(registerDTO: RegisterDTO): Promise<UserResponseDTO> {
-    const userExist = await this.userService.checkIfTheEmailAddressExists(
+    const userExist = await this.userService.checkEmailExists(
       registerDTO.email,
     );
 
@@ -33,10 +41,9 @@ export class AuthService {
       throw new BadRequestException('Users can only register as MEMBER');
     }
 
-    const saltOrRounds = 10;
-    const hashedPassword = await bcrypt.hash(
+    const hashedPassword = await this.hashPassword(
       registerDTO.password,
-      saltOrRounds,
+      this.saltRounds,
     );
 
     const userData: RegisterDTO = {
@@ -45,5 +52,36 @@ export class AuthService {
     };
 
     return await this.userService.createUser(userData);
+  }
+
+  async login(loginDTO: LoginDTO): Promise<LoginResponseDto> {
+    try {
+      const { password } = loginDTO;
+
+      const user = await this.userService.findUserByEmail(loginDTO.email);
+      if (!user) {
+        throw new UnauthorizedException('Wrong email or password');
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        throw new UnauthorizedException('Wrong email or password');
+      }
+
+      const payload = { sub: user.id, email: user.email, role: user.role };
+
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to login');
+    }
+  }
+
+  private async hashPassword(password: string, salt: number): Promise<string> {
+    return bcrypt.hash(password, salt);
   }
 }
