@@ -11,11 +11,17 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDTO } from './dtos/update-user.dto';
 import { UserResponseDTO } from './dtos/user-response.dto';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from './entity/user.entity';
+import { AuthGuard } from 'src/guards/auth.guard';
 
+@UseGuards(AuthGuard, RolesGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -30,6 +36,7 @@ export class UserController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
   @Get(':id')
   async getUserById(
     @Param('id', ParseIntPipe) id: number,
@@ -45,6 +52,7 @@ export class UserController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
   @Put(':id')
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
@@ -65,6 +73,7 @@ export class UserController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(204)
   async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<void> {
