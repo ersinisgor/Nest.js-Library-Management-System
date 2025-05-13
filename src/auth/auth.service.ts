@@ -16,6 +16,14 @@ import { LoginDTO } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from '@nestjs/jwt';
 
+type JwtPayload = {
+  sub: number;
+  email: string;
+  role: string;
+  iat?: Date;
+  exp?: Date;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -67,9 +75,9 @@ export class AuthService {
 
   async login(loginDTO: LoginDTO): Promise<LoginResponseDto> {
     try {
-      const { password } = loginDTO;
+      const { password, email } = loginDTO;
 
-      const user = await this.userService.findUserByEmail(loginDTO.email);
+      const user = await this.userService.findUserByEmail(email);
       if (!user) {
         throw new UnauthorizedException('Wrong email or password');
       }
@@ -79,11 +87,15 @@ export class AuthService {
         throw new UnauthorizedException('Wrong email or password');
       }
 
-      const payload = { sub: user.id, email: user.email, role: user.role };
-
-      return {
-        access_token: await this.jwtService.signAsync(payload),
+      const payload: JwtPayload = {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
       };
+
+      const token = await this.generateToken(payload);
+
+      return token;
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -93,6 +105,8 @@ export class AuthService {
     }
   }
 
+  async logout() {}
+
   private async hashPassword(password: string, salt: number): Promise<string> {
     try {
       return await bcrypt.hash(password, salt);
@@ -100,5 +114,11 @@ export class AuthService {
       console.error('Error hashing password:', error);
       throw new InternalServerErrorException('Failed to hash password');
     }
+  }
+
+  private async generateToken(payload: JwtPayload): Promise<LoginResponseDto> {
+    return {
+      accessToken: await this.jwtService.signAsync(payload),
+    };
   }
 }
