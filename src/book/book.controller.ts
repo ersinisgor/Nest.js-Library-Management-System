@@ -12,12 +12,18 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  UseGuards,
 } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Book } from './entity/book.entity';
 import { CreateBookDTO } from './dtos/create-book.dto';
 import { UpdateBookDTO } from './dtos/update-book.dto';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { UserRole } from 'src/user/entity/user.entity';
+import { Roles } from 'src/auth/roles.decorator';
 
+@UseGuards(AuthGuard, RolesGuard)
 @Controller('books')
 export class BookController {
   constructor(private readonly bookService: BookService) {}
@@ -45,6 +51,7 @@ export class BookController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
   @Post()
   @HttpCode(201)
   async createBook(@Body() book: CreateBookDTO): Promise<Book> {
@@ -63,6 +70,7 @@ export class BookController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
   @Put(':id')
   async updateBook(
     @Param('id', ParseIntPipe) id: number,
@@ -83,6 +91,7 @@ export class BookController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(204)
   async deleteBook(@Param('id', ParseIntPipe) id: number): Promise<void> {
