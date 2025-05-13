@@ -11,17 +11,24 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ConflictException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthorService } from './author.service';
 import { CreateAuthorDTO } from './dtos/create-author.dto';
 import { Author } from './entity/author.entity';
 import { UpdateAuthorDTO } from './dtos/update-author.dto';
 import { Book } from '../book/entity/book.entity';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/entity/user.entity';
 
+@UseGuards(AuthGuard, RolesGuard)
 @Controller('authors')
 export class AuthorController {
   constructor(private readonly authorService: AuthorService) {}
 
+  @Roles(UserRole.ADMIN)
   @Post()
   @HttpCode(201)
   async createAuthor(@Body() author: CreateAuthorDTO): Promise<Author> {
@@ -76,6 +83,7 @@ export class AuthorController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
   @Put(':id')
   async updateAuthor(
     @Param('id', ParseIntPipe) id: number,
@@ -95,6 +103,7 @@ export class AuthorController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(204)
   async deleteAuthor(@Param('id', ParseIntPipe) id: number): Promise<void> {
