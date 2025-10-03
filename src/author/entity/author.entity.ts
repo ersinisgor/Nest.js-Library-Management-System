@@ -10,7 +10,7 @@ export class Author {
   @Column({ unique: true, nullable: false })
   name: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: '' })
   biography?: string;
 
   @OneToMany(() => Book, (book) => book.author)

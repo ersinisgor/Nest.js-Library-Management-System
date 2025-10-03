@@ -16,7 +16,7 @@ export class CreateBookDTO {
 
   @IsBoolean()
   @IsOptional()
-  isAvailable: boolean;
+  isAvailable?: boolean;
 
   @IsInt()
   @IsNotEmpty()
