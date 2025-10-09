@@ -109,6 +109,22 @@ export class BorrowController {
     }
   }
 
+  @Roles(UserRole.ADMIN)
+  @Get('user/:userId/current-count')
+  async getCurrentBorrowCount(@Param('userId', ParseIntPipe) userId: number) {
+    try {
+      return await this.borrowService.getCurrentBorrowCount(userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error in getCurrentBorrowCount:', error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve current borrow count',
+      );
+    }
+  }
+
   @Roles(UserRole.MEMBER)
   @Patch(':id')
   async update(@Req() req: AuthRequest, @Param('id', ParseIntPipe) id: number) {
