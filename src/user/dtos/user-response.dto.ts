@@ -7,7 +7,9 @@ import {
   IsString,
   IsDate,
   IsBoolean,
+  IsArray,
 } from 'class-validator';
+import { BorrowResponseDTO } from '../../borrow/dto/borrow-response.dto';
 
 export class UserResponseDTO {
   @Expose()
@@ -41,6 +43,7 @@ export class UserResponseDTO {
   @Exclude()
   password: string;
 
-  @Exclude()
-  borrows: any;
+  @Expose()
+  @IsArray()
+  borrows: BorrowResponseDTO[];
 }
