@@ -17,7 +17,7 @@ import { UserService } from '../user/user.service';
 @Injectable()
 export class BorrowService {
   constructor(
-    @InjectRepository(Borrow) private borrowsRepository: Repository<Borrow>,
+    @InjectRepository(Borrow) private borrowRepository: Repository<Borrow>,
     @Inject(forwardRef(() => BookService))
     private readonly bookService: BookService,
     @Inject(forwardRef(() => UserService))
@@ -35,7 +35,7 @@ export class BorrowService {
         throw new BadRequestException('Book is not available for borrowing');
       }
 
-      const borrow = this.borrowsRepository.create({
+      const borrow = this.borrowRepository.create({
         user,
         book,
         borrowDate: new Date(),
@@ -44,9 +44,9 @@ export class BorrowService {
       book.isAvailable = false;
       await this.bookService.updateBook(bookId, { isAvailable: false });
 
-      const savedBorrow = await this.borrowsRepository.save(borrow);
+      const savedBorrow = await this.borrowRepository.save(borrow);
 
-      return await this.borrowsRepository.findOne({
+      return await this.borrowRepository.findOne({
         where: { id: savedBorrow.id },
         relations: { user: true, book: true },
         select: {
@@ -71,7 +71,7 @@ export class BorrowService {
 
   async findAll() {
     try {
-      return await this.borrowsRepository.find({
+      return await this.borrowRepository.find({
         relations: { user: true, book: true },
         select: {
           user: { id: true, name: true },
@@ -86,7 +86,7 @@ export class BorrowService {
 
   async findAllCurrent() {
     try {
-      return await this.borrowsRepository.find({
+      return await this.borrowRepository.find({
         where: { returnDate: IsNull() },
         relations: { user: true, book: true },
         select: {
@@ -104,7 +104,7 @@ export class BorrowService {
 
   async findOne(id: number) {
     try {
-      const borrow = await this.borrowsRepository.findOne({
+      const borrow = await this.borrowRepository.findOne({
         where: { id },
         relations: { user: true, book: true },
         select: {
@@ -132,7 +132,7 @@ export class BorrowService {
         throw new NotFoundException(`Book with ID ${bookId} not found`);
       }
 
-      const borrows = await this.borrowsRepository.find({
+      const borrows = await this.borrowRepository.find({
         where: { book: { id: bookId } },
         relations: { user: true },
         select: {
@@ -158,7 +158,7 @@ export class BorrowService {
 
   async update(userId: number, id: number) {
     try {
-      const borrow = await this.borrowsRepository.findOne({
+      const borrow = await this.borrowRepository.findOne({
         where: { id },
         relations: { book: true, user: true },
       });
@@ -183,7 +183,7 @@ export class BorrowService {
         isAvailable: true,
       });
 
-      return await this.borrowsRepository.save(borrow);
+      return await this.borrowRepository.save(borrow);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -199,11 +199,11 @@ export class BorrowService {
 
   async remove(id: number) {
     try {
-      const borrow = await this.borrowsRepository.findOne({ where: { id } });
+      const borrow = await this.borrowRepository.findOne({ where: { id } });
       if (!borrow) {
         throw new NotFoundException(`Borrow with ID ${id} not found`);
       }
-      await this.borrowsRepository.delete(id);
+      await this.borrowRepository.delete(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
