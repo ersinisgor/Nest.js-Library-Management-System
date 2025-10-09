@@ -13,6 +13,9 @@ import { Repository, IsNull } from 'typeorm';
 import { Borrow } from './entity/borrow.entity';
 import { BookService } from '../book/book.service';
 import { UserService } from '../user/user.service';
+import { UserRole } from '../user/entity/user.entity';
+import { plainToClass } from 'class-transformer';
+import { BorrowResponseDTO } from './dto/borrow-response.dto';
 
 @Injectable()
 export class BorrowService {
@@ -29,6 +32,16 @@ export class BorrowService {
       const { bookId } = createBorrowDto;
 
       const user = await this.userService.getUserById(userId);
+      const currentBorrows = await this.borrowRepository.count({
+        where: { user: { id: userId }, returnDate: IsNull() },
+      });
+      const maxBorrows = user.role === UserRole.MEMBER ? 3 : Infinity;
+      if (currentBorrows >= maxBorrows) {
+        throw new BadRequestException(
+          `You can borrow at most ${maxBorrows} books at a time`,
+        );
+      }
+
       const book = await this.bookService.getBookById(bookId);
 
       if (!book.isAvailable) {
@@ -46,7 +59,7 @@ export class BorrowService {
 
       const savedBorrow = await this.borrowRepository.save(borrow);
 
-      return await this.borrowRepository.findOne({
+      const result = await this.borrowRepository.findOne({
         where: { id: savedBorrow.id },
         relations: { user: true, book: true },
         select: {
@@ -57,6 +70,8 @@ export class BorrowService {
           book: { id: true, title: true },
         },
       });
+
+      return plainToClass(BorrowResponseDTO, result);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -71,13 +86,14 @@ export class BorrowService {
 
   async findAll() {
     try {
-      return await this.borrowRepository.find({
+      const borrows = await this.borrowRepository.find({
         relations: { user: true, book: true },
         select: {
           user: { id: true, name: true },
           book: { id: true, title: true },
         },
       });
+      return borrows.map((borrow) => plainToClass(BorrowResponseDTO, borrow));
     } catch (error) {
       console.error('Error retrieving borrows:', error);
       throw new InternalServerErrorException('Failed to retrieve borrows');
@@ -86,7 +102,7 @@ export class BorrowService {
 
   async findAllCurrent() {
     try {
-      return await this.borrowRepository.find({
+      const borrows = await this.borrowRepository.find({
         where: { returnDate: IsNull() },
         relations: { user: true, book: true },
         select: {
@@ -94,6 +110,7 @@ export class BorrowService {
           book: { id: true, title: true },
         },
       });
+      return borrows.map((borrow) => plainToClass(BorrowResponseDTO, borrow));
     } catch (error) {
       console.error('Error retrieving current borrows:', error);
       throw new InternalServerErrorException(
@@ -115,7 +132,7 @@ export class BorrowService {
       if (!borrow) {
         throw new NotFoundException(`Borrow with ID ${id} not found`);
       }
-      return borrow;
+      return plainToClass(BorrowResponseDTO, borrow);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -144,7 +161,7 @@ export class BorrowService {
         order: { borrowDate: 'DESC' },
       });
 
-      return borrows;
+      return borrows.map((borrow) => plainToClass(BorrowResponseDTO, borrow));
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -183,7 +200,8 @@ export class BorrowService {
         isAvailable: true,
       });
 
-      return await this.borrowRepository.save(borrow);
+      const updatedBorrow = await this.borrowRepository.save(borrow);
+      return plainToClass(BorrowResponseDTO, updatedBorrow);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -210,6 +228,24 @@ export class BorrowService {
       }
       console.error('Error deleting borrow:', error);
       throw new InternalServerErrorException('Failed to delete borrow');
+    }
+  }
+
+  async getCurrentBorrowCount(userId: number) {
+    try {
+      await this.userService.getUserById(userId);
+      const count = await this.borrowRepository.count({
+        where: { user: { id: userId }, returnDate: IsNull() },
+      });
+      return { userId, count };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error retrieving current borrow count:', error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve current borrow count',
+      );
     }
   }
 }
