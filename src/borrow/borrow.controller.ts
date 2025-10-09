@@ -15,7 +15,7 @@ import {
   Req,
   ForbiddenException,
 } from '@nestjs/common';
-import { BorrowsService } from './borrows.service';
+import { BorrowService } from './borrow.service';
 import { CreateBorrowDto } from './dto/create-borrow.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
@@ -30,8 +30,8 @@ interface AuthRequest extends Request {
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('borrows')
-export class BorrowsController {
-  constructor(private readonly borrowsService: BorrowsService) {}
+export class BorrowController {
+  constructor(private readonly borrowService: BorrowService) {}
 
   @Roles(UserRole.MEMBER)
   @Post()
@@ -42,7 +42,7 @@ export class BorrowsController {
   ) {
     try {
       const userId = req.user.sub;
-      return await this.borrowsService.create(userId, createBorrowDto);
+      return await this.borrowService.create(userId, createBorrowDto);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -59,7 +59,7 @@ export class BorrowsController {
   @Get()
   async findAll() {
     try {
-      return await this.borrowsService.findAll();
+      return await this.borrowService.findAll();
     } catch (error) {
       console.error('Error in findAll:', error);
       throw new InternalServerErrorException('Failed to retrieve borrows');
@@ -70,7 +70,7 @@ export class BorrowsController {
   @Get('current')
   async findAllCurrent() {
     try {
-      return await this.borrowsService.findAllCurrent();
+      return await this.borrowService.findAllCurrent();
     } catch (error) {
       console.error('Error in findAllCurrent:', error);
       throw new InternalServerErrorException(
@@ -83,7 +83,7 @@ export class BorrowsController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     try {
-      return await this.borrowsService.findOne(id);
+      return await this.borrowService.findOne(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -97,7 +97,7 @@ export class BorrowsController {
   @Get('book/:bookId')
   async findHistoryByBook(@Param('bookId', ParseIntPipe) bookId: number) {
     try {
-      return await this.borrowsService.findHistoryByBookId(bookId);
+      return await this.borrowService.findHistoryByBookId(bookId);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -114,7 +114,7 @@ export class BorrowsController {
   async update(@Req() req: AuthRequest, @Param('id', ParseIntPipe) id: number) {
     try {
       const userId = req.user.sub;
-      return await this.borrowsService.update(userId, id);
+      return await this.borrowService.update(userId, id);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -133,7 +133,7 @@ export class BorrowsController {
   @HttpCode(204)
   async remove(@Param('id', ParseIntPipe) id: number) {
     try {
-      await this.borrowsService.remove(id);
+      await this.borrowService.remove(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;

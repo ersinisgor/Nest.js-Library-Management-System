@@ -8,7 +8,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { BorrowsModule } from './borrows/borrows.module';
+import { BorrowModule } from './borrow/borrow.module';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
@@ -46,7 +46,7 @@ import { JwtModule } from '@nestjs/jwt';
     AuthorModule,
     UserModule,
     AuthModule,
-    BorrowsModule,
+    BorrowModule,
   ],
   controllers: [AppController],
   providers: [AppService],

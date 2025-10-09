@@ -15,7 +15,7 @@ import { BookService } from '../book/book.service';
 import { UserService } from '../user/user.service';
 
 @Injectable()
-export class BorrowsService {
+export class BorrowService {
   constructor(
     @InjectRepository(Borrow) private borrowsRepository: Repository<Borrow>,
     @Inject(forwardRef(() => BookService))
