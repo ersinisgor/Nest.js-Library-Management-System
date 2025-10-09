@@ -33,7 +33,6 @@ interface AuthRequest extends Request {
 export class BorrowController {
   constructor(private readonly borrowService: BorrowService) {}
 
-  @Roles(UserRole.MEMBER)
   @Post()
   @HttpCode(201)
   async create(
