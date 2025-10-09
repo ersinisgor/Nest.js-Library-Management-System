@@ -1,6 +1,5 @@
 import {
   Injectable,
-  ConflictException,
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
@@ -61,8 +60,7 @@ export class BorrowsService {
     } catch (error) {
       if (
         error instanceof NotFoundException ||
-        error instanceof BadRequestException ||
-        error instanceof ConflictException
+        error instanceof BadRequestException
       ) {
         throw error;
       }
@@ -148,6 +146,9 @@ export class BorrowsService {
 
       return borrows;
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       console.error('Error retrieving book borrow history:', error);
       throw new InternalServerErrorException(
         'Failed to retrieve book borrow history',
@@ -187,7 +188,6 @@ export class BorrowsService {
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException ||
-        error instanceof ConflictException ||
         error instanceof ForbiddenException
       ) {
         throw error;

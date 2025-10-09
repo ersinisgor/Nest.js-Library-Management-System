@@ -7,13 +7,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
   BadRequestException,
-  ConflictException,
   Param,
   ParseIntPipe,
   Patch,
   Post,
   UseGuards,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { BorrowsService } from './borrows.service';
 import { CreateBorrowDto } from './dto/create-borrow.dto';
@@ -46,8 +46,7 @@ export class BorrowsController {
     } catch (error) {
       if (
         error instanceof NotFoundException ||
-        error instanceof BadRequestException ||
-        error instanceof ConflictException
+        error instanceof BadRequestException
       ) {
         throw error;
       }
@@ -120,7 +119,7 @@ export class BorrowsController {
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException ||
-        error instanceof ConflictException
+        error instanceof ForbiddenException
       ) {
         throw error;
       }
