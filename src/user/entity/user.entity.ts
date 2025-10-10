@@ -1,4 +1,4 @@
-import { Borrow } from '../../borrow/entity/borrow.entity';
+import { Borrow } from 'src/borrow/entity/borrow.entity';
 import {
   Column,
   Entity,

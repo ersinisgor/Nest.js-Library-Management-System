@@ -12,8 +12,8 @@ import { QueryFailedError, Repository } from 'typeorm';
 import { Author } from './entity/author.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateAuthorDTO } from './dtos/update-author.dto';
-import { BookService } from '../book/book.service';
-import { Book } from '../book/entity/book.entity';
+import { BookService } from 'src/book/book.service';
+import { Book } from 'src/book/entity/book.entity';
 
 @Injectable()
 export class AuthorService {

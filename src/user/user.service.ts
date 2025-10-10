@@ -13,8 +13,8 @@ import { QueryFailedError, Repository } from 'typeorm';
 import { UpdateUserDTO } from './dtos/update-user.dto';
 import { plainToClass } from 'class-transformer';
 import { UserResponseDTO } from './dtos/user-response.dto';
-import { AuthService } from '../auth/auth.service';
-import { RegisterDTO } from '../auth/dtos/register.dto';
+import { AuthService } from 'src/auth/auth.service';
+import { RegisterDTO } from 'src/auth/dtos/register.dto';
 
 @Injectable()
 export class UserService {

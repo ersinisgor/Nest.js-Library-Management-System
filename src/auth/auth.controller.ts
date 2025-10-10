@@ -14,10 +14,10 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDTO } from './dtos/register.dto';
-import { UserResponseDTO } from '../user/dtos/user-response.dto';
+import { UserResponseDTO } from 'src/user/dtos/user-response.dto';
 import { LoginDTO } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
-import { AuthGuard } from '../guards/auth.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {

@@ -11,9 +11,9 @@ import { CreateBorrowDto } from './dto/create-borrow.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Borrow } from './entity/borrow.entity';
-import { BookService } from '../book/book.service';
-import { UserService } from '../user/user.service';
-import { UserRole } from '../user/entity/user.entity';
+import { BookService } from 'src/book/book.service';
+import { UserService } from 'src/user/user.service';
+import { UserRole } from 'src/user/entity/user.entity';
 import { plainToClass } from 'class-transformer';
 import { BorrowResponseDTO } from './dto/borrow-response.dto';
 

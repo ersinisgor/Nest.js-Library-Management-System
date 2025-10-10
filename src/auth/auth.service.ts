@@ -7,11 +7,11 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserService } from '../user/user.service';
+import { UserService } from 'src/user/user.service';
 import { RegisterDTO } from './dtos/register.dto';
 import * as bcrypt from 'bcrypt';
-import { UserResponseDTO } from '../user/dtos/user-response.dto';
-import { UserRole } from '../user/entity/user.entity';
+import { UserResponseDTO } from 'src/user/dtos/user-response.dto';
+import { UserRole } from 'src/user/entity/user.entity';
 import { LoginDTO } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from '@nestjs/jwt';
