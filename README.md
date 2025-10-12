@@ -50,6 +50,7 @@ Business logic is handled in services (e.g., BorrowService calculates fines on r
 This project uses the following technologies and libraries:
 
 - **NestJS (^11.0.1)**: Core framework for building the server-side application. Provides modular structure with modules, controllers, services, guards, and pipes.
+- **TypeScript (^5.7.3)**: Programming language used throughout the project for type-safe development, enabling decorators, interfaces, and strong typing in entities, DTOs, and services.
 - **TypeORM (0.3.22)**: ORM for interacting with the database. Entities define models (User, Book, Author, Borrow, Fine). Supports migrations and relations (OneToMany, ManyToOne).
 - **PostgreSQL (via pg ^8.14.1)**: Database engine. Configured via environment variables for host, port, username, password, and database.
 - **JWT (@nestjs/jwt ^11.0.0)**: For authentication tokens. Tokens include user ID, email, and role; expiration configured via env.
@@ -59,11 +60,9 @@ This project uses the following technologies and libraries:
 - **Express (via @nestjs/platform-express)**: Underlying HTTP server.
 - **ValidationPipe**: Global pipe for request validation (whitelist, transform).
 - **Guards**: AuthGuard (JWT verification) and RolesGuard (role-based access).
-- **Testing**: Jest for unit/e2e tests.
 - **Dev Tools**: ESLint, Prettier for linting/formatting; ts-node for TypeScript execution.
-- **Other**: RxJS for observables, reflect-metadata for decorators.
 
-The app is private (UNLICENSED) and uses TypeScript (^5.7.3).
+The app is private (UNLICENSED).
 
 ## Installation
 
