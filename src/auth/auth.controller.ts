@@ -10,14 +10,17 @@ import {
   UnauthorizedException,
   UseGuards,
   Get,
-  Request,
+  Req,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDTO } from './dtos/register.dto';
-import { UserResponseDTO } from '../user/dtos/user-response.dto';
+import { UserResponseDTO } from 'src/user/dtos/user-response.dto';
 import { LoginDTO } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
-import { AuthGuard } from '../guards/auth.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { plainToClass } from 'class-transformer';
+import { AuthRequest } from './types/auth-request.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -59,7 +62,18 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  async getProfile(@Req() req: AuthRequest): Promise<UserResponseDTO> {
+    try {
+      const user = await this.authService.getUserProfile(req.user.sub);
+
+      return plainToClass(UserResponseDTO, user);
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      console.error('Error in getProfile:', error);
+      throw new InternalServerErrorException('Failed to retrieve profile');
+    }
   }
 }

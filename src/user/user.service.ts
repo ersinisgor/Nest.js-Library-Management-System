@@ -13,8 +13,8 @@ import { QueryFailedError, Repository } from 'typeorm';
 import { UpdateUserDTO } from './dtos/update-user.dto';
 import { plainToClass } from 'class-transformer';
 import { UserResponseDTO } from './dtos/user-response.dto';
-import { AuthService } from '../auth/auth.service';
-import { RegisterDTO } from '../auth/dtos/register.dto';
+import { AuthService } from 'src/auth/auth.service';
+import { RegisterDTO } from 'src/auth/dtos/register.dto';
 
 @Injectable()
 export class UserService {
@@ -56,10 +56,34 @@ export class UserService {
 
   async getUserById(id: number): Promise<UserResponseDTO> {
     try {
-      const user = await this.userRepository.findOne({ where: { id } });
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: {
+          borrows: { book: true, fines: true },
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          isActive: true,
+          borrows: {
+            id: true,
+            borrowDate: true,
+            returnDate: true,
+            dueDate: true,
+            book: { id: true, title: true },
+            fines: { id: true, amount: true, isPaid: true },
+          },
+        },
+      });
+
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
+
       return plainToClass(UserResponseDTO, user);
     } catch (error) {
       if (error instanceof NotFoundException) {

@@ -8,8 +8,9 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { BorrowsModule } from './borrows/borrows.module';
+import { BorrowModule } from './borrow/borrow.module';
 import { JwtModule } from '@nestjs/jwt';
+import { FineModule } from './fine/fine.module';
 
 @Module({
   imports: [
@@ -26,7 +27,11 @@ import { JwtModule } from '@nestjs/jwt';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        synchronize: false,
+        migrations: [__dirname + '/migrations/*.js'],
+        cli: {
+          migrationsDir: 'src/database/migrations',
+        },
       }),
       inject: [ConfigService],
     }),
@@ -46,7 +51,8 @@ import { JwtModule } from '@nestjs/jwt';
     AuthorModule,
     UserModule,
     AuthModule,
-    BorrowsModule,
+    BorrowModule,
+    FineModule,
   ],
   controllers: [AppController],
   providers: [AppService],

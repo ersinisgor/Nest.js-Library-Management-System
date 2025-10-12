@@ -8,7 +8,7 @@ import {
   Matches,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { UserRole } from '../../user/entity/user.entity';
+import { UserRole } from 'src/user/entity/user.entity';
 
 export class RegisterDTO {
   @IsNotEmpty()

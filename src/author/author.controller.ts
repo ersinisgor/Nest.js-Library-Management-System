@@ -17,7 +17,7 @@ import { AuthorService } from './author.service';
 import { CreateAuthorDTO } from './dtos/create-author.dto';
 import { Author } from './entity/author.entity';
 import { UpdateAuthorDTO } from './dtos/update-author.dto';
-import { Book } from '../book/entity/book.entity';
+import { Book } from 'src/book/entity/book.entity';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';

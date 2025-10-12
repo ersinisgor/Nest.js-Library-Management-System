@@ -1,19 +1,20 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { BorrowsService } from './borrows.service';
-import { BorrowsController } from './borrows.controller';
+import { FineController } from './fine.controller';
+import { FineService } from './fine.service';
 import { DatabaseModule } from 'src/database/database.module';
-import { BookModule } from 'src/book/book.module';
 import { UserModule } from 'src/user/user.module';
+import { BorrowModule } from 'src/borrow/borrow.module';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     DatabaseModule,
-    forwardRef(() => BookModule),
     forwardRef(() => UserModule),
+    forwardRef(() => BorrowModule),
     JwtModule,
   ],
-  controllers: [BorrowsController],
-  providers: [BorrowsService],
+  controllers: [FineController],
+  providers: [FineService],
+  exports: [FineService],
 })
-export class BorrowsModule {}
+export class FineModule {}
