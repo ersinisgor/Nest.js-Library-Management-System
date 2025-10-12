@@ -1,6 +1,13 @@
-import { Book } from '../../book/entity/book.entity';
-import { User } from '../../user/entity/user.entity';
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
+import { Book } from 'src/book/entity/book.entity';
+import { Fine } from 'src/fine/entity/fine.entity';
+import { User } from 'src/user/entity/user.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  Column,
+  OneToMany,
+} from 'typeorm';
 
 @Entity()
 export class Borrow {
@@ -18,4 +25,10 @@ export class Borrow {
 
   @Column({ nullable: true })
   returnDate: Date;
+
+  @Column()
+  dueDate: Date;
+
+  @OneToMany(() => Fine, (fine) => fine.borrow)
+  fines: Fine[];
 }

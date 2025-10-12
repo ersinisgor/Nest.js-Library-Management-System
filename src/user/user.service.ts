@@ -58,11 +58,32 @@ export class UserService {
     try {
       const user = await this.userRepository.findOne({
         where: { id },
-        relations: { borrows: true },
+        relations: {
+          borrows: { book: true, fines: true },
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          isActive: true,
+          borrows: {
+            id: true,
+            borrowDate: true,
+            returnDate: true,
+            dueDate: true,
+            book: { id: true, title: true },
+            fines: { id: true, amount: true, isPaid: true },
+          },
+        },
       });
+
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
+
       return plainToClass(UserResponseDTO, user);
     } catch (error) {
       if (error instanceof NotFoundException) {

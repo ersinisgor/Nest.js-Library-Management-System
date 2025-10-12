@@ -7,15 +7,16 @@ import {
   forwardRef,
   ForbiddenException,
 } from '@nestjs/common';
-import { CreateBorrowDto } from './dto/create-borrow.dto';
+import { CreateBorrowDto } from './dtos/create-borrow.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, LessThan } from 'typeorm';
 import { Borrow } from './entity/borrow.entity';
 import { BookService } from 'src/book/book.service';
 import { UserService } from 'src/user/user.service';
+import { FineService } from 'src/fine/fine.service';
 import { UserRole } from 'src/user/entity/user.entity';
 import { plainToClass } from 'class-transformer';
-import { BorrowResponseDTO } from './dto/borrow-response.dto';
+import { BorrowResponseDTO } from './dtos/borrow-response.dto';
 
 @Injectable()
 export class BorrowService {
@@ -25,16 +26,18 @@ export class BorrowService {
     private readonly bookService: BookService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+    @Inject(forwardRef(() => FineService))
+    private readonly fineService: FineService,
   ) {}
 
   async create(userId: number, createBorrowDto: CreateBorrowDto) {
     try {
       const { bookId } = createBorrowDto;
-
       const user = await this.userService.getUserById(userId);
       const currentBorrows = await this.borrowRepository.count({
         where: { user: { id: userId }, returnDate: IsNull() },
       });
+
       const maxBorrows = user.role === UserRole.MEMBER ? 3 : Infinity;
       if (currentBorrows >= maxBorrows) {
         throw new BadRequestException(
@@ -42,8 +45,15 @@ export class BorrowService {
         );
       }
 
-      const book = await this.bookService.getBookById(bookId);
+      const totalUnpaidFines =
+        await this.fineService.getTotalUnpaidFines(userId);
+      if (totalUnpaidFines > 10) {
+        throw new ForbiddenException(
+          'Cannot borrow due to unpaid fines exceeding $10',
+        );
+      }
 
+      const book = await this.bookService.getBookById(bookId);
       if (!book.isAvailable) {
         throw new BadRequestException('Book is not available for borrowing');
       }
@@ -52,6 +62,7 @@ export class BorrowService {
         user,
         book,
         borrowDate: new Date(),
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       });
 
       book.isAvailable = false;
@@ -66,6 +77,7 @@ export class BorrowService {
           id: true,
           borrowDate: true,
           returnDate: true,
+          dueDate: true,
           user: { id: true, name: true },
           book: { id: true, title: true },
         },
@@ -75,7 +87,8 @@ export class BorrowService {
     } catch (error) {
       if (
         error instanceof NotFoundException ||
-        error instanceof BadRequestException
+        error instanceof BadRequestException ||
+        error instanceof ForbiddenException
       ) {
         throw error;
       }
@@ -91,6 +104,10 @@ export class BorrowService {
         select: {
           user: { id: true, name: true },
           book: { id: true, title: true },
+          id: true,
+          borrowDate: true,
+          returnDate: true,
+          dueDate: true,
         },
       });
       return borrows.map((borrow) => plainToClass(BorrowResponseDTO, borrow));
@@ -108,6 +125,10 @@ export class BorrowService {
         select: {
           user: { id: true, name: true },
           book: { id: true, title: true },
+          id: true,
+          borrowDate: true,
+          returnDate: true,
+          dueDate: true,
         },
       });
       return borrows.map((borrow) => plainToClass(BorrowResponseDTO, borrow));
@@ -127,6 +148,10 @@ export class BorrowService {
         select: {
           user: { id: true, name: true },
           book: { id: true, title: true },
+          id: true,
+          borrowDate: true,
+          returnDate: true,
+          dueDate: true,
         },
       });
       if (!borrow) {
@@ -156,6 +181,7 @@ export class BorrowService {
           id: true,
           borrowDate: true,
           returnDate: true,
+          dueDate: true,
           user: { id: true, name: true },
         },
         order: { borrowDate: 'DESC' },
@@ -173,7 +199,7 @@ export class BorrowService {
     }
   }
 
-  async update(userId: number, id: number) {
+  async update(userId: number, id: number): Promise<BorrowResponseDTO> {
     try {
       const borrow = await this.borrowRepository.findOne({
         where: { id },
@@ -193,6 +219,18 @@ export class BorrowService {
         throw new BadRequestException('Book is already returned');
       }
 
+      const overdueDays = Math.max(
+        0,
+        Math.ceil(
+          (new Date().getTime() - borrow.dueDate.getTime()) /
+            (24 * 60 * 60 * 1000),
+        ),
+      );
+      const fineAmount = overdueDays * 0.5;
+      if (fineAmount > 0) {
+        await this.fineService.createFine(borrow, fineAmount);
+      }
+
       borrow.returnDate = new Date();
       borrow.book.isAvailable = true;
 
@@ -201,7 +239,21 @@ export class BorrowService {
       });
 
       const updatedBorrow = await this.borrowRepository.save(borrow);
-      return plainToClass(BorrowResponseDTO, updatedBorrow);
+
+      const result = await this.borrowRepository.findOne({
+        where: { id: updatedBorrow.id },
+        relations: { user: true, book: true },
+        select: {
+          id: true,
+          borrowDate: true,
+          returnDate: true,
+          dueDate: true,
+          user: { id: true, name: true },
+          book: { id: true, title: true },
+        },
+      });
+
+      return plainToClass(BorrowResponseDTO, result);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -245,6 +297,85 @@ export class BorrowService {
       console.error('Error retrieving current borrow count:', error);
       throw new InternalServerErrorException(
         'Failed to retrieve current borrow count',
+      );
+    }
+  }
+
+  async renew(userId: number, id: number) {
+    try {
+      const borrow = await this.borrowRepository.findOne({
+        where: { id, returnDate: IsNull() },
+        relations: { book: true, user: true },
+      });
+
+      if (!borrow) {
+        throw new NotFoundException(
+          `Borrow with ID ${id} not found or already returned`,
+        );
+      }
+
+      if (borrow.user.id !== userId) {
+        throw new ForbiddenException(
+          'You can only renew your own borrowed books',
+        );
+      }
+
+      borrow.dueDate = new Date(
+        borrow.dueDate.getTime() + 7 * 24 * 60 * 60 * 1000,
+      );
+
+      const updatedBorrow = await this.borrowRepository.save(borrow);
+
+      const result = await this.borrowRepository.findOne({
+        where: { id: updatedBorrow.id },
+        relations: { user: true, book: true },
+        select: {
+          id: true,
+          borrowDate: true,
+          returnDate: true,
+          dueDate: true,
+          user: { id: true, name: true },
+          book: { id: true, title: true },
+        },
+      });
+
+      return plainToClass(BorrowResponseDTO, result);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
+      console.error('Error renewing borrow:', error);
+      throw new InternalServerErrorException('Failed to renew borrow');
+    }
+  }
+
+  async findOverdue() {
+    try {
+      const borrows = await this.borrowRepository.find({
+        where: {
+          returnDate: IsNull(),
+          dueDate: LessThan(new Date()),
+        },
+        relations: { user: true, book: true },
+        select: {
+          user: { id: true, name: true },
+          book: { id: true, title: true },
+          id: true,
+          borrowDate: true,
+          returnDate: true,
+          dueDate: true,
+        },
+      });
+
+      return borrows.map((borrow) => plainToClass(BorrowResponseDTO, borrow));
+    } catch (error) {
+      console.error('Error retrieving overdue borrows:', error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve overdue borrows',
       );
     }
   }

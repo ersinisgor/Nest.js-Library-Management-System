@@ -14,15 +14,17 @@ import {
   UseGuards,
   Req,
   ForbiddenException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { BorrowService } from './borrow.service';
-import { CreateBorrowDto } from './dto/create-borrow.dto';
+import { CreateBorrowDto } from './dtos/create-borrow.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { UserRole } from 'src/user/entity/user.entity';
 import { Roles } from 'src/auth/roles.decorator';
 import { Request } from 'express';
-import { JwtPayload } from 'src/guards/auth.guard';
+import { JwtPayload } from 'src/auth/types/jwt-payload.interface';
 
 interface AuthRequest extends Request {
   user: JwtPayload;
@@ -45,7 +47,8 @@ export class BorrowController {
     } catch (error) {
       if (
         error instanceof NotFoundException ||
-        error instanceof BadRequestException
+        error instanceof BadRequestException ||
+        error instanceof ForbiddenException
       ) {
         throw error;
       }
@@ -74,6 +77,20 @@ export class BorrowController {
       console.error('Error in findAllCurrent:', error);
       throw new InternalServerErrorException(
         'Failed to retrieve current borrows',
+      );
+    }
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Get('overdue')
+  @UsePipes(new ValidationPipe({ skipMissingProperties: true }))
+  async findOverdue() {
+    try {
+      return await this.borrowService.findOverdue();
+    } catch (error) {
+      console.error('Error in findOverdue:', error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve overdue borrows',
       );
     }
   }
@@ -140,6 +157,25 @@ export class BorrowController {
       }
       console.error('Error in update:', error);
       throw new InternalServerErrorException('Failed to update borrow');
+    }
+  }
+
+  @Roles(UserRole.MEMBER)
+  @Patch(':id/renew')
+  async renew(@Req() req: AuthRequest, @Param('id', ParseIntPipe) id: number) {
+    try {
+      const userId = req.user.sub;
+      return await this.borrowService.renew(userId, id);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
+      console.error('Error in renew:', error);
+      throw new InternalServerErrorException('Failed to renew borrow');
     }
   }
 
