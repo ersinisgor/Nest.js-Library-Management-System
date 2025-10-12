@@ -3,23 +3,20 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-
-export interface JwtPayload {
-  sub: number;
-  email: string;
-  role: string;
-  iat?: Date;
-  exp?: Date;
-}
+import { JwtPayload } from 'src/auth/types/jwt-payload.interface';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
+    @Inject(forwardRef(() => JwtService))
     private jwtService: JwtService,
+    @Inject(forwardRef(() => ConfigService))
     private configService: ConfigService,
   ) {}
 
