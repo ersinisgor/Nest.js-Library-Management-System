@@ -9,7 +9,7 @@ import {
   IsBoolean,
   IsArray,
 } from 'class-validator';
-import { BorrowResponseDTO } from 'src/borrow/dto/borrow-response.dto';
+import { BorrowResponseDTO } from 'src/borrow/dtos/borrow-response.dto';
 
 export class UserResponseDTO {
   @Expose()
