@@ -5,24 +5,18 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserService } from '../user/user.service';
+import { UserService } from 'src/user/user.service';
 import { RegisterDTO } from './dtos/register.dto';
 import * as bcrypt from 'bcrypt';
-import { UserResponseDTO } from '../user/dtos/user-response.dto';
-import { UserRole } from '../user/entity/user.entity';
+import { UserResponseDTO } from 'src/user/dtos/user-response.dto';
+import { UserRole } from 'src/user/entity/user.entity';
 import { LoginDTO } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from '@nestjs/jwt';
-
-type JwtPayload = {
-  sub: number;
-  email: string;
-  role: string;
-  iat?: Date;
-  exp?: Date;
-};
+import { JwtPayload } from './types/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -105,7 +99,24 @@ export class AuthService {
     }
   }
 
-  async logout() {}
+  async getUserProfile(userId: number): Promise<UserResponseDTO> {
+    try {
+      const user = await this.userService.getUserById(userId);
+
+      return user;
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      console.error('Error retrieving user profile:', error);
+      throw new InternalServerErrorException('Failed to retrieve user profile');
+    }
+  }
+
+  logout(): void {
+    return;
+  }
 
   private async hashPassword(password: string, salt: number): Promise<string> {
     try {

@@ -1,4 +1,5 @@
-import { Borrow } from '../../borrows/entity/borrow.entity';
+import { Borrow } from 'src/borrow/entity/borrow.entity';
+import { Fine } from 'src/fine/entity/fine.entity';
 import {
   Column,
   Entity,
@@ -45,4 +46,7 @@ export class User {
 
   @OneToMany(() => Borrow, (borrow) => borrow.user)
   borrows: Borrow[];
+
+  @OneToMany(() => Fine, (fine) => fine.user)
+  fines: Fine[];
 }

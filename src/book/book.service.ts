@@ -12,7 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { CreateBookDTO } from './dtos/create-book.dto';
 import { UpdateBookDTO } from './dtos/update-book.dto';
-import { AuthorService } from '../author/author.service';
+import { AuthorService } from 'src/author/author.service';
 
 @Injectable()
 export class BookService {
