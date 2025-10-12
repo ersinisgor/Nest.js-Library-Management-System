@@ -1,98 +1,201 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS Library Management System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Table of Contents
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- [Introduction](#introduction)
+- [Features](#features)
+- [How It Works](#how-it-works)
+- [Technologies](#technologies)
+- [Installation](#installation)
+- [Running the Application](#running-the-application)
+- [Database Migrations](#database-migrations)
+- [API Endpoints](#api-endpoints)
+- [Authentication](#authentication)
+- [Roles and Permissions](#roles-and-permissions)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Description
+## Introduction
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is a backend application built with NestJS for managing a library system. It was developed as a learning project for NestJS and implements real-world library rules for book borrowing, fines, and user management. The system tracks books, authors, users, borrows, and fines, with role-based access for admins and members.
 
-## Project setup
+The application uses a PostgreSQL database and provides RESTful APIs for CRUD operations, authentication, and library-specific logic like borrowing limits and fine calculations.
+
+## Features
+
+- User registration and login with JWT authentication.
+- Role-based access: Admin and Member.
+- Manage books and authors (CRUD operations, mostly admin-only).
+- Borrowing system: Members can borrow/return/renew books.
+- Fine management: Automatic fines for overdue books, payment to unblock.
+- History tracking: Borrow history per book.
+- Validation and error handling for business rules.
+
+## How It Works
+
+The library enforces the following rules:
+
+- A user (member) can borrow a maximum of 3 books at a time.
+- Borrow duration: 14 days. If not returned on time, a fine of $0.50 per overdue day is applied.
+- If total unpaid fines reach $10, the user is blocked from borrowing new books.
+- Blocked users can borrow again after paying fines.
+- Members can request a renewal, extending the due date by 7 days (if not already overdue or renewed).
+- Full borrow history: Who borrowed a book, when, return date, and overdue days.
+- Admins have access to all data and management features; members can only manage their borrows and view profiles/fines.
+
+Business logic is handled in services (e.g., BorrowService calculates fines on return, checks limits).
+
+## Technologies
+
+This project uses the following technologies and libraries:
+
+- **NestJS (^11.0.1)**: Core framework for building the server-side application. Provides modular structure with modules, controllers, services, guards, and pipes.
+- **TypeORM (0.3.22)**: ORM for interacting with the database. Entities define models (User, Book, Author, Borrow, Fine). Supports migrations and relations (OneToMany, ManyToOne).
+- **PostgreSQL (via pg ^8.14.1)**: Database engine. Configured via environment variables for host, port, username, password, and database.
+- **JWT (@nestjs/jwt ^11.0.0)**: For authentication tokens. Tokens include user ID, email, and role; expiration configured via env.
+- **bcrypt (^5.1.1)**: Password hashing for secure user registration/login.
+- **class-validator (^0.14.1) and class-transformer (^0.5.1)**: For DTO validation and transformation.
+- **ConfigModule (@nestjs/config ^4.0.2)**: Manages environment variables (.env file).
+- **Express (via @nestjs/platform-express)**: Underlying HTTP server.
+- **ValidationPipe**: Global pipe for request validation (whitelist, transform).
+- **Guards**: AuthGuard (JWT verification) and RolesGuard (role-based access).
+- **Testing**: Jest for unit/e2e tests.
+- **Dev Tools**: ESLint, Prettier for linting/formatting; ts-node for TypeScript execution.
+- **Other**: RxJS for observables, reflect-metadata for decorators.
+
+The app is private (UNLICENSED) and uses TypeScript (^5.7.3).
+
+## Installation
+
+1. **Clone the repository**:
 
 ```bash
-$ npm install
+git clone <repository-url>
+cd nestjs-library-management
 ```
 
-## Compile and run the project
+2. **Install dependencies**:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+3. **Set up environment variables**:
+   Create a `.env` file in the root directory with the following:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=your_postgres_user
+DB_PASSWORD=your_postgres_password
+DB_DATABASE=library_db
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRATION=3600s  # e.g., 1 hour
+PORT=3000  # Optional, default 3000
 ```
 
-## Deployment
+Replace values accordingly. Ensure PostgreSQL is installed and running.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+4. **Set up PostgreSQL**:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- Create the database: `CREATE DATABASE library_db;`
+- Note: An "Unknown Author" entity should be created manually or via script for book reassignments on author deletion.
+
+## Running the Application
+
+- **Development mode** (with watch):
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- **Production mode**:
 
-## Resources
+```bash
+npm run build
+npm run start:prod
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+- The server runs on `http://localhost:3000` (or configured PORT).
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Database Migrations
 
-## Support
+TypeORM migrations handle schema changes.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- Create a migration: `npm run migration:create --name=YourMigrationName`
+- Generate from entities: `npm run migration:generate --name=YourMigrationName`
+- Run migrations: `npm run migration:run`
+- Revert: `npm run migration:revert`
+- Show: `npm run migration:show`
 
-## Stay in touch
+Entities are auto-loaded; synchronize is false for production safety.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## API Endpoints
+
+All endpoints return JSON. Use tools like Postman or curl. Authenticated endpoints require Bearer Token in headers.
+
+### Auth
+
+- `POST /auth/register`: Register a new member (body: { name, email, password }).
+- `POST /auth/login`: Login (body: { email, password }) → Returns JWT.
+- `GET /auth/profile`: Get logged-in user profile (authenticated).
+
+### Authors (GET open; others admin-only)
+
+- `POST /authors`: Create author (body: { name, biography }).
+- `GET /authors`: List all authors with books.
+- `GET /authors/:id`: Get author by ID.
+- `GET /authors/:id/books`: Get books by author.
+- `PUT /authors/:id`: Update author.
+- `DELETE /authors/:id`: Delete author (reassigns books to 'Unknown Author').
+
+### Books
+
+- `GET /books`: List all books (authenticated).
+- `GET /books/:id`: Get book by ID.
+- `POST /books`: Create book (admin, body: { title, isbn, pageCount, authorId }).
+- `PUT /books/:id`: Update book (admin).
+- `DELETE /books/:id`: Delete book (admin).
+
+### Borrows (Member for actions; Admin for views)
+
+- `POST /borrows`: Borrow a book (member, body: { bookId }) → Checks limits/fines/block.
+- `GET /borrows`: List all borrows (admin).
+- `GET /borrows/current`: List current borrows (admin).
+- `GET /borrows/overdue`: List overdue (admin).
+- `GET /borrows/:id`: Get borrow by ID (admin).
+- `GET /borrows/book/:bookId`: Borrow history for book (admin).
+- `GET /borrows/user/:userId/current-count`: Current borrows count (admin).
+- `PATCH /borrows/:id`: Return book (member) → Calculates fine if overdue.
+- `PATCH /borrows/:id/renew`: Renew borrow (member) → +7 days.
+- `DELETE /borrows/:id`: Delete (admin).
+
+### Fines
+
+- `GET /fines/user/:userId`: Get unpaid fines (own or admin).
+- `GET /fines/user/:userId/total`: Total unpaid amount.
+- `POST /fines/pay/:userId`: Pay all fines (own or admin) → Unblocks user.
+
+### Users (Admin mostly)
+
+- `GET /users`: List all users.
+- `GET /users/:id`: Get user by ID (admin).
+- `PUT /users/:id`: Update user (admin, body: { name, email, role, isActive }).
+- `DELETE /users/:id`: Delete user (admin).
+
+## Authentication
+
+- JWT-based. Login returns `accessToken`.
+- Include in headers: `Authorization: Bearer <token>`.
+- Guards protect routes; invalid token → 401.
+
+## Roles and Permissions
+
+- **Admin**: Full access (create/delete/update sensitive data).
+- **Member**: Borrow/return/renew, view own fines/profile.
+- Decorator `@Roles()` and RolesGuard enforce this.
+- New users register as MEMBER only; admins promote via update.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED - Private project.
